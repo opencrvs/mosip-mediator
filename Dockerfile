@@ -14,7 +14,6 @@ COPY package.json .
 COPY yarn.lock .
 COPY lerna.json .
 COPY packages/api/package.json packages/api/package.json
-COPY patches patches
 RUN yarn install
 
 COPY . .

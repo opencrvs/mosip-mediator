@@ -62,12 +62,3 @@ else
 ssh $SSH_USER@$SSH_HOST 'cd /tmp/compose && VERSION='$VERSION' docker stack deploy -c docker-compose.yml -c docker-compose.deploy.yml -c docker-compose.prod-deploy.yml --with-registry-auth mosip'
 fi
 
-# If staging, wait then clear data
-if [[ "$ENV" = "development" ]]; then
-    echo 
-    echo "Waiting 2 mins for stack to deploy before working with data..."
-    echo
-    sleep 120
-    ssh $SSH_USER@$SSH_HOST '/tmp/compose/infrastructure/clear-all-data.sh'
-    ssh $SSH_USER@$SSH_HOST '/tmp/compose/infrastructure/backup-restore.sh'
-fi
