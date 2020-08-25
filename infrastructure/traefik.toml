@@ -1,0 +1,46 @@
+logLevel = "INFO"
+defaultEntryPoints = ["http", "https"]
+insecureSkipVerify = true
+
+[traefikLog]
+  filePath = "/data/traefik/traefik.log"
+  format   = "json"
+
+[entryPoints]
+  [entryPoints.http]
+  address = ":80"
+    [entryPoints.http.redirect]
+    entryPoint = "https"
+  [entryPoints.https]
+  address = ":443"
+  compress = true
+  [entryPoints.https.tls]
+
+[api]
+
+[ping]
+
+[docker]
+domain = "{{hostname}}"
+swarmMode = true
+exposedByDefault = false
+watch = true
+
+[acme]
+email = "euan@yumweteki.io"
+storage = "acme.json"
+entryPoint = "https"
+onHostRule = true
+
+[acme.httpChallenge]
+entryPoint = "http"
+
+[[acme.domains]]
+  main = "{{hostname}}"
+  sans = ["mosip.{{hostname}}"]
+
+[retry]
+
+# Enable gzip compression
+[http.middlewares]
+  [http.middlewares.test-compress.compress]

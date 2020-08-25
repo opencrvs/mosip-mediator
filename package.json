@@ -1,0 +1,49 @@
+{
+  "private": true,
+  "license": "UNLICENSED",
+  "workspaces": [
+    "packages/*"
+  ],
+  "husky": {
+    "hooks": {
+      "pre-commit": "lerna run --parallel precommit"
+    }
+  },
+  "scripts": {
+    "postinstall": "patch-package",
+    "start": "yarn build && lerna run --parallel $OTHER_LERNA_FLAGS start",
+    "start:prod": "yarn build && lerna run --parallel $OTHER_LERNA_FLAGS start:prod",
+    "dev": "yarn dev:secrets:gen && yarn run start",
+    "dev:secrets:gen": "openssl genrsa -out .secrets/private-key.pem 2048 && openssl rsa -pubout -in .secrets/private-key.pem -out .secrets/public-key.pem",
+    "test": "CI=true lerna run test --stream",
+    "compose:build": "yarn build:image && docker-compose build",
+    "compose:all": "yarn run compose:all:build && yarn run compose:all:up",
+    "compose:all:up": "docker-compose -p mosip -f docker-compose.yml up",
+    "compose:all:down": "docker-compose -p mosip -f docker-compose.yml down",
+    "compose:all:build": "docker-compose -f docker-compose.yml build",
+    "compose:push:version": "export VERSION=`git log -1 --pretty=format:%h` && yarn compose:build && docker-compose push && unset VERSION",
+    "compose:push": "yarn compose:build && docker-compose push && yarn compose:push:version",
+    "build": "lerna run build --stream --concurrency=1",
+    "populate": "lerna run populate",
+    "build:image": "export VERSION=`git log -1 --pretty=format:%h` && docker build --build-arg VERSION=${VERSION} -t mosip-build . && unset VERSION",
+    "build:clean": "lerna run build:clean",
+    "deploy:staging": "bash deploy.sh development 161.35.35.107"
+  },
+  "devDependencies": {
+    "@types/dotenv": "^6.1.0",
+    "@types/node-fetch": "^2.3.7",
+    "bundlesize": "^0.18.0",
+    "concurrently": "^3.5.1",
+    "husky": "1.0.0-rc.13",
+    "js-yaml": "^3.13.1",
+    "lerna": "^2.11.0",
+    "lint-staged": "^7.1.0",
+    "prettier": "2.0.4"
+  },
+  "dependencies": {
+    "opener": "^1.5.0",
+    "patch-package": "^6.2.0",
+    "postinstall-postinstall": "^2.1.0",
+    "node-fetch": "^2.6.0"
+  }
+}

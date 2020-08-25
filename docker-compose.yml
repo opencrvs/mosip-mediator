@@ -1,0 +1,11 @@
+version: '3.3'
+
+services:
+  api:
+    image: opencrvs/mosip-api:${VERSION:-latest}
+    build:
+      context: .
+      dockerfile: ./packages/api/Dockerfile
+    restart: unless-stopped
+    environment:
+      - HOST=0.0.0.0

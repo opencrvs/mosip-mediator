@@ -1,0 +1,93 @@
+{
+  "name": "@mosip/api",
+  "version": "1.0.0-alpha.0.1",
+  "description": "mosip api service",
+  "main": "src/index.js",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "cross-env NODE_ENV=development nodemon --exec ts-node -r tsconfig-paths/register src/index.ts",
+    "start:prod": "node build/dist/src/index.js",
+    "test": "jest  --coverage --silent --noStackTrace && yarn test:compilation",
+    "test:watch": "jest --watch",
+    "open:cov": "yarn test && opener coverage/index.html",
+    "precommit": "tslint --project ./tsconfig.json && lint-staged",
+    "test:compilation": "tsc --noEmit",
+    "build": "tsc",
+    "postbuild": "ef-tspm",
+    "build:clean": "rm -rf build"
+  },
+  "dependencies": {
+    "app-module-path": "^2.2.0",
+    "boom": "^7.2.0",
+    "hapi": "^17.5.1",
+    "hapi-auth-jwt2": "^8.1.0",
+    "hapi-pino": "^6.3.0",
+    "joi": "^14.0.6",
+    "node-fetch": "^2.6.0",
+    "pino": "^5.14.0",
+    "uuid": "^3.3.2",
+    "dotenv": "^8.0.0"
+  },
+  "devDependencies": {
+    "@types/boom": "^7.2.0",
+    "@types/dotenv": "^6.1.1",
+    "@types/hapi": "^17.0.12",
+    "@types/hapi-auth-jwt2": "^8.0.1",
+    "@types/hapi-pino": "^6.3.0",
+    "@types/jest": "^24.0.13",
+    "@types/joi": "^14.0.0",
+    "@types/node-fetch": "^2.3.7",
+    "@types/pino": "^5.14.0",
+    "@types/uuid": "^3.4.3",
+    "@ef-carbon/tspm": "^2.2.5",
+    "cross-env": "^5.2.0",
+    "dotenv": "^8.0.0",
+    "jest": "24.9.0",
+    "nodemon": "^1.17.5",
+    "prettier": "^1.15.2",
+    "ts-jest": "^24.0.2",
+    "ts-node": "^6.1.1",
+    "tsconfig-paths": "^3.8.0",
+    "tslint": "^5.17.0",
+    "tslint-microsoft-contrib": "^6.2.0",
+    "tslint-config-prettier": "^1.12.0",
+    "typescript": "3.7.2"
+  },
+  "lint-staged": {
+    "src/**/*.{ts,graphql}": [
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "modulePaths": [
+      "<rootDir>"
+    ],
+    "moduleNameMapper": {
+      "@api/(.*)": "<rootDir>/src/$1"
+    },
+    "setupFiles": [
+      "./test/setupJest.ts"
+    ],
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ],
+    "testEnvironment": "node",
+    "coverageReporters": [
+      "json",
+      "lcov",
+      "text",
+      "html"
+    ]
+  }
+}
