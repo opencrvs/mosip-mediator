@@ -37,7 +37,7 @@ entryPoint = "http"
 
 [[acme.domains]]
   main = "{{hostname}}"
-  sans = ["mosip.{{hostname}}"]
+  sans = ["api.{{hostname}}"]
 
 [retry]
 

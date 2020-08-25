@@ -29,7 +29,7 @@ services:
     deploy:
       labels:
         - 'traefik.enable=true'
-        - 'traefik.frontend.rule=Host: mosip.{{hostname}}'
+        - 'traefik.frontend.rule=Host: api.{{hostname}}'
         - 'traefik.port=4545'
         - 'traefik.docker.network=opencrvs_overlay_net'
       replicas: 2

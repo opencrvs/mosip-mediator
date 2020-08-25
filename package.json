@@ -27,7 +27,7 @@
     "populate": "lerna run populate",
     "build:image": "export VERSION=`git log -1 --pretty=format:%h` && docker build --build-arg VERSION=${VERSION} -t mosip-build . && unset VERSION",
     "build:clean": "lerna run build:clean",
-    "deploy:staging": "bash deploy.sh development 161.35.35.107"
+    "deploy:staging": "bash deploy.sh development mosip.yumeteki.io"
   },
   "devDependencies": {
     "@types/dotenv": "^6.1.0",
