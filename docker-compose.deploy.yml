@@ -1,12 +1,12 @@
-version: '3.3'
+version: "3.3"
 
 services:
   traefik:
     image: traefik:1.7.16
     ports:
-      - '80:80'
-      - '443:443'
-      - '8090:8080'
+      - "80:80"
+      - "443:443"
+      - "8090:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /data/traefik/acme.json:/acme.json
@@ -24,14 +24,16 @@ services:
   api:
     secrets:
       - jwt-public-key.{{ts}}
+      - CLIENT_ID
+      - CLIENT_SECRET
     environment:
       - CERT_PUBLIC_KEY_PATH=/run/secrets/jwt-public-key.{{ts}}
     deploy:
       labels:
-        - 'traefik.enable=true'
-        - 'traefik.frontend.rule=Host: api.{{hostname}}'
-        - 'traefik.port=4545'
-        - 'traefik.docker.network=opencrvs_overlay_net'
+        - "traefik.enable=true"
+        - "traefik.frontend.rule=Host: api.{{hostname}}"
+        - "traefik.port=4545"
+        - "traefik.docker.network=opencrvs_overlay_net"
       replicas: 2
     networks:
       - overlay_net
@@ -40,6 +42,10 @@ secrets:
   jwt-public-key.{{ts}}:
     external: true
   jwt-private-key.{{ts}}:
+    external: true
+  CLIENT_ID:
+    external: true
+  CLIENT_SECRET:
     external: true
 
 configs:

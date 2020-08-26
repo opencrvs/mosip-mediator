@@ -1,4 +1,4 @@
-version: '3.3'
+version: "3.3"
 
 services:
   api:
@@ -9,3 +9,5 @@ services:
     restart: unless-stopped
     environment:
       - HOST=0.0.0.0
+      - AUTH_URL=https://auth.opencrvs-staging.jembi.org/
+      - WEBHOOK_URL=https://webhooks.opencrvs-staging.jembi.org/webhooks
