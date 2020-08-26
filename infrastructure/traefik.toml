@@ -27,7 +27,7 @@ exposedByDefault = false
 watch = true
 
 [acme]
-email = "euan@yumweteki.io"
+email = "euan@yumeteki.io"
 storage = "acme.json"
 entryPoint = "https"
 onHostRule = true
