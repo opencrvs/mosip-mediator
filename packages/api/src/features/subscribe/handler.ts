@@ -30,6 +30,7 @@ export default async function subscribeHandler(
     throw new Error('Cannot create token')
   }
   try {
+    logger.info(`subscribing to webhook: ${createToken}`)
     const webhookSubscriptionResponse = await fetch(WEBHOOK_URL, {
       method: 'POST',
       body: JSON.stringify({
