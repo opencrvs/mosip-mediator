@@ -30,7 +30,7 @@ export default async function subscribeHandler(
     throw new Error('Cannot create token')
   }
   try {
-    await fetch(WEBHOOK_URL, {
+    const webhookSubscriptionResponse = await fetch(WEBHOOK_URL, {
       method: 'POST',
       body: JSON.stringify({
         address: 'https://api.mosip.yumeteki.io/webhooks',
@@ -47,6 +47,7 @@ export default async function subscribeHandler(
       .catch(error => {
         return Promise.reject(new Error(` request failed: ${error.message}`))
       })
+    return h.response(webhookSubscriptionResponse).code(200)
   } catch (err) {
     throw Error(err.statusText)
   }
