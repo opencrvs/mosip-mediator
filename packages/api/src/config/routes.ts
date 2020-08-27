@@ -1,5 +1,8 @@
 import subscribeHandler from '@api/features/subscribe/handler'
-import webhooksHandler from '@api/features/webhooks/handler'
+import {
+  webhooksHandler,
+  subscriptionConfirmationHandler
+} from '@api/features/webhooks/handler'
 
 export const getRoutes = () => {
   const routes = [
@@ -32,6 +35,15 @@ export const getRoutes = () => {
       method: 'POST',
       path: '/webhooks',
       handler: webhooksHandler,
+      config: {
+        auth: false,
+        tags: ['api']
+      }
+    },
+    {
+      method: 'GET',
+      path: '/webhooks',
+      handler: subscriptionConfirmationHandler,
       config: {
         auth: false,
         tags: ['api']
