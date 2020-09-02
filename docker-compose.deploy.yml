@@ -24,11 +24,11 @@ services:
   api:
     secrets:
       - jwt-public-key.{{ts}}
-      - CLIENT_ID
-      - CLIENT_SECRET
-      - SHA_SECRET
     environment:
       - CERT_PUBLIC_KEY_PATH=/run/secrets/jwt-public-key.{{ts}}
+      - CLIENT_ID=/run/secrets/CLIENT_ID
+      - CLIENT_SECRET=/run/secrets/CLIENT_SECRET
+      - SHA_SECRET=/run/secrets/SHA_SECRET
     deploy:
       labels:
         - "traefik.enable=true"
