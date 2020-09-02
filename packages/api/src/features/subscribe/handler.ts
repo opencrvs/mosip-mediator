@@ -38,31 +38,31 @@ export default async function subscribeHandler(
   if (!createToken) {
     throw new Error('Cannot create token')
   }
-  try {
-    logger.info(`subscribing to webhook: ${JSON.stringify(createToken)}`)
-    await fetch(WEBHOOK_URL, {
-      method: 'POST',
-      body: JSON.stringify({
-        hub: {
-          callback: 'https://api.mosip.yumeteki.io/webhooks',
-          mode: 'subscribe',
-          secret: SHA_SECRET,
-          topic: 'BIRTH_REGISTERED'
-        }
-      }),
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${createToken.token}`
+  logger.info(`subscribing to webhook: ${JSON.stringify(createToken)}`)
+  const subscriptionResponse = await fetch(WEBHOOK_URL, {
+    method: 'POST',
+    body: JSON.stringify({
+      hub: {
+        callback: 'https://api.mosip.yumeteki.io/webhooks',
+        mode: 'subscribe',
+        secret: SHA_SECRET,
+        topic: 'BIRTH_REGISTERED'
       }
+    }),
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${createToken.token}`
+    }
+  })
+    .then(response => {
+      return response.json()
     })
-      .then(response => {
-        return response.json()
-      })
-      .catch(error => {
-        return Promise.reject(new Error(` request failed: ${error.message}`))
-      })
-    return h.response().code(202)
-  } catch (err) {
-    throw Error(err.statusText)
+    .catch(error => {
+      return Promise.reject(new Error(` request failed: ${error.message}`))
+    })
+  if (!subscriptionResponse) {
+    throw new Error('Cannot get response from subscription process')
   }
+  ogger.info(`subscription response: ${JSON.stringify(subscriptionResponse)}`)
+  return h.response().code(202)
 }
