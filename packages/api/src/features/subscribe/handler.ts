@@ -14,16 +14,16 @@ export default async function subscribeHandler(
   request: Hapi.Request,
   h: Hapi.ResponseToolkit
 ) {
-  logger.info(`subscribeHandler has been called`)
-
+  const authPayload = JSON.stringify({
+    client_id: CLIENT_ID,
+    client_secret: CLIENT_SECRET
+  })
+  logger.info(`subscribeHandler has been called: ${authPayload}`)
   const createToken = await fetch(
     resolve(AUTH_URL, 'authenticateSystemClient'),
     {
       method: 'POST',
-      body: JSON.stringify({
-        client_id: CLIENT_ID,
-        client_secret: CLIENT_SECRET
-      }),
+      body: authPayload,
       headers: {
         'Content-Type': 'application/json'
       }
