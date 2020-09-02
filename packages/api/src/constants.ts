@@ -10,3 +10,4 @@ export const AUTH_URL =
   process.env.AUTH_URL || 'https://auth.opencrvs-staging.jembi.org/'
 export const CLIENT_ID = process.env.CLIENT_ID || ''
 export const CLIENT_SECRET = process.env.CLIENT_SECRET || ''
+export const SHA_SECRET = process.env.SHA_SECRET || ''

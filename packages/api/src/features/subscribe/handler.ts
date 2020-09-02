@@ -1,6 +1,12 @@
 import * as Hapi from 'hapi'
 import { logger } from '@api/logger'
-import { WEBHOOK_URL, AUTH_URL, CLIENT_ID, CLIENT_SECRET } from '@api/constants'
+import {
+  WEBHOOK_URL,
+  AUTH_URL,
+  CLIENT_ID,
+  CLIENT_SECRET,
+  SHA_SECRET
+} from '@api/constants'
 import fetch from 'node-fetch'
 import { resolve } from 'url'
 
@@ -34,8 +40,12 @@ export default async function subscribeHandler(
     const webhookSubscriptionResponse = await fetch(WEBHOOK_URL, {
       method: 'POST',
       body: JSON.stringify({
-        address: 'https://api.mosip.yumeteki.io/webhooks',
-        trigger: 'BIRTH_REGISTERED'
+        hub: {
+          callback: 'https://api.mosip.yumeteki.io/webhooks',
+          mode: 'subscribe',
+          secret: SHA_SECRET,
+          topic: 'BIRTH_REGISTERED'
+        }
       }),
       headers: {
         'Content-Type': 'application/json',

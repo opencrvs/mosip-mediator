@@ -26,6 +26,7 @@ services:
       - jwt-public-key.{{ts}}
       - CLIENT_ID
       - CLIENT_SECRET
+      - SHA_SECRET
     environment:
       - CERT_PUBLIC_KEY_PATH=/run/secrets/jwt-public-key.{{ts}}
     deploy:
@@ -46,6 +47,8 @@ secrets:
   CLIENT_ID:
     external: true
   CLIENT_SECRET:
+    external: true
+  SHA_SECRET:
     external: true
 
 configs:
