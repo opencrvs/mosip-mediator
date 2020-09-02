@@ -2,6 +2,10 @@ import * as Hapi from 'hapi'
 import { logger } from '@api/logger'
 // import * as Joi from 'joi'
 
+interface IRequestParams {
+  [key: string]: string
+}
+
 export async function webhooksHandler(
   request: Hapi.Request,
   h: Hapi.ResponseToolkit
@@ -16,13 +20,15 @@ export async function subscriptionConfirmationHandler(
   request: Hapi.Request,
   h: Hapi.ResponseToolkit
 ) {
-  const mode = request.params.mode
-  const challenge = request.params.challenge
+  const params = request.query as IRequestParams
+
+  const mode = params['mode']
+  const challenge = params['challenge']
   // TODO: verifyToken to be implemented
   // const verifyToken = request.params.verifyToken
   logger.info(
     `subscriptionConfirmationHandler has been called with params: ${JSON.stringify(
-      request.params
+      params
     )}`
   )
   if (!mode || mode !== 'subscribe' || !challenge) {
