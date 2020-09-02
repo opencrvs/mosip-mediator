@@ -55,7 +55,7 @@ export default async function subscribeHandler(
     }
   })
     .then(response => {
-      return response.json()
+      return response
     })
     .catch(error => {
       return Promise.reject(new Error(` request failed: ${error.message}`))
