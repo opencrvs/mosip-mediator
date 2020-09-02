@@ -24,14 +24,20 @@ export async function subscriptionConfirmationHandler(
 
   const mode = params['mode']
   const challenge = params['challenge']
-  // TODO: verifyToken to be implemented
-  // const verifyToken = request.params.verifyToken
+  const topic = params['topic']
+
   logger.info(
     `subscriptionConfirmationHandler has been called with params: ${JSON.stringify(
       params
     )}`
   )
-  if (!mode || mode !== 'subscribe' || !challenge) {
+  if (
+    !mode ||
+    mode !== 'subscribe' ||
+    !challenge ||
+    !topic ||
+    topic !== 'BIRTH_REGISTERED'
+  ) {
     throw new Error('Params incorrect')
   } else {
     return h.response({ challenge }).code(200)
