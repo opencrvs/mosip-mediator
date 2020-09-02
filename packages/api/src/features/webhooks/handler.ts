@@ -23,7 +23,7 @@ export async function subscriptionConfirmationHandler(
   const params = request.query as IRequestParams
 
   const mode = params['mode']
-  const challenge = decodeURIComponent(params['challenge'])
+  const challenge = params['challenge']
   const topic = params['topic']
 
   logger.info(
@@ -40,6 +40,6 @@ export async function subscriptionConfirmationHandler(
   ) {
     throw new Error('Params incorrect')
   } else {
-    return h.response({ challenge }).code(200)
+    return h.response({ challenge: decodeURIComponent(challenge) }).code(200)
   }
 }
