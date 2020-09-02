@@ -26,11 +26,6 @@ export async function subscriptionConfirmationHandler(
   const challenge = params['challenge']
   const topic = params['topic']
 
-  logger.info(
-    `subscriptionConfirmationHandler has been called with params: ${JSON.stringify(
-      params
-    )}`
-  )
   if (
     !mode ||
     mode !== 'subscribe' ||

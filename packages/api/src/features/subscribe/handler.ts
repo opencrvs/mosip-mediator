@@ -1,5 +1,4 @@
 import * as Hapi from 'hapi'
-import { logger } from '@api/logger'
 import {
   WEBHOOK_URL,
   AUTH_URL,
@@ -14,7 +13,6 @@ export default async function subscribeHandler(
   request: Hapi.Request,
   h: Hapi.ResponseToolkit
 ) {
-  logger.info(`subscribeHandler has been called`)
   const authPayload = JSON.stringify({
     client_id: CLIENT_ID,
     client_secret: CLIENT_SECRET
@@ -38,7 +36,6 @@ export default async function subscribeHandler(
   if (!createToken) {
     throw new Error('Cannot create token')
   }
-  logger.info(`subscribing to webhook: ${JSON.stringify(createToken)}`)
   const subscriptionResponse = await fetch(WEBHOOK_URL, {
     method: 'POST',
     body: JSON.stringify({
@@ -63,6 +60,5 @@ export default async function subscribeHandler(
   if (!subscriptionResponse) {
     throw new Error('Cannot get response from subscription process')
   }
-  logger.info(`subscription response: ${JSON.stringify(subscriptionResponse)}`)
   return h.response().code(202)
 }
