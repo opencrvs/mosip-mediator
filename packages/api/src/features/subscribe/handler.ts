@@ -14,11 +14,11 @@ export default async function subscribeHandler(
   request: Hapi.Request,
   h: Hapi.ResponseToolkit
 ) {
+  logger.info(`subscribeHandler has been called`)
   const authPayload = JSON.stringify({
     client_id: CLIENT_ID,
     client_secret: CLIENT_SECRET
   })
-  logger.info(`subscribeHandler has been called: ${authPayload}`)
   const createToken = await fetch(
     resolve(AUTH_URL, 'authenticateSystemClient'),
     {
@@ -40,7 +40,7 @@ export default async function subscribeHandler(
   }
   try {
     logger.info(`subscribing to webhook: ${JSON.stringify(createToken)}`)
-    const webhookSubscriptionResponse = await fetch(WEBHOOK_URL, {
+    await fetch(WEBHOOK_URL, {
       method: 'POST',
       body: JSON.stringify({
         hub: {
@@ -61,7 +61,7 @@ export default async function subscribeHandler(
       .catch(error => {
         return Promise.reject(new Error(` request failed: ${error.message}`))
       })
-    return h.response(webhookSubscriptionResponse).code(200)
+    return h.response().code(202)
   } catch (err) {
     throw Error(err.statusText)
   }
