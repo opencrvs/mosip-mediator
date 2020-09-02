@@ -21,7 +21,9 @@ export async function subscriptionConfirmationHandler(
   // TODO: verifyToken to be implemented
   // const verifyToken = request.params.verifyToken
   logger.info(
-    `subscriptionConfirmationHandler has been called with params: ${request.params}`
+    `subscriptionConfirmationHandler has been called with params: ${JSON.stringify(
+      request.params
+    )}`
   )
   if (!mode || mode !== 'subscribe' || !challenge) {
     throw new Error('Params incorrect')

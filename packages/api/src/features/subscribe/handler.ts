@@ -16,16 +16,19 @@ export default async function subscribeHandler(
 ) {
   logger.info(`subscribeHandler has been called`)
 
-  const createToken = await fetch(resolve(AUTH_URL, 'authenticateSystem'), {
-    method: 'POST',
-    body: JSON.stringify({
-      client_id: CLIENT_ID,
-      client_secret: CLIENT_SECRET
-    }),
-    headers: {
-      'Content-Type': 'application/json'
+  const createToken = await fetch(
+    resolve(AUTH_URL, 'authenticateSystemClient'),
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET
+      }),
+      headers: {
+        'Content-Type': 'application/json'
+      }
     }
-  })
+  )
     .then(response => {
       return response.json()
     })
