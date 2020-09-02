@@ -23,7 +23,7 @@ export async function subscriptionConfirmationHandler(
   const params = request.query as IRequestParams
 
   const mode = params['mode']
-  const challenge = params['challenge']
+  const challenge = decodeURIComponent(params['challenge'])
   const topic = params['topic']
 
   logger.info(
