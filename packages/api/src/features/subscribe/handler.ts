@@ -63,6 +63,6 @@ export default async function subscribeHandler(
   if (!subscriptionResponse) {
     throw new Error('Cannot get response from subscription process')
   }
-  ogger.info(`subscription response: ${JSON.stringify(subscriptionResponse)}`)
+  logger.info(`subscription response: ${JSON.stringify(subscriptionResponse)}`)
   return h.response().code(202)
 }
