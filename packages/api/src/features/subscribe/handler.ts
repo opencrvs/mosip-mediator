@@ -8,6 +8,7 @@ import {
 } from '@api/constants'
 import fetch from 'node-fetch'
 import { resolve } from 'url'
+import { logger } from '@api/logger'
 
 export default async function subscribeHandler(
   request: Hapi.Request,
@@ -17,6 +18,8 @@ export default async function subscribeHandler(
     client_id: CLIENT_ID,
     client_secret: CLIENT_SECRET
   })
+
+  logger.info(`authPayload: ${authPayload}`)
   const createToken = await fetch(
     resolve(AUTH_URL, 'authenticateSystemClient'),
     {
@@ -27,15 +30,17 @@ export default async function subscribeHandler(
       }
     }
   )
-    .then(response => {
+    .then((response) => {
       return response.json()
     })
-    .catch(error => {
+    .catch((error) => {
       return Promise.reject(new Error(` request failed: ${error.message}`))
     })
   if (!createToken) {
     throw new Error('Cannot create token')
   }
+
+  logger.info(`createToken: ${createToken}`)
   const subscriptionResponse = await fetch(WEBHOOK_URL, {
     method: 'POST',
     body: JSON.stringify({
@@ -51,10 +56,10 @@ export default async function subscribeHandler(
       Authorization: `Bearer ${createToken.token}`
     }
   })
-    .then(response => {
+    .then((response) => {
       return response
     })
-    .catch(error => {
+    .catch((error) => {
       return Promise.reject(new Error(` request failed: ${error.message}`))
     })
   if (!subscriptionResponse) {
