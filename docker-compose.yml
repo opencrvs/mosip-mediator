@@ -9,5 +9,5 @@ services:
     restart: unless-stopped
     environment:
       - HOST=0.0.0.0
-      - AUTH_URL=https://auth.opencrvs-staging.jembi.org/
-      - WEBHOOK_URL=https://webhooks.opencrvs-staging.jembi.org/webhooks
+      - AUTH_URL= # Insert the URL to your OpenCRVS auth service installation
+      - WEBHOOK_URL= # Insert your webhook URL

@@ -30,10 +30,10 @@ export default async function subscribeHandler(
       }
     }
   )
-    .then((response) => {
+    .then(response => {
       return response.json()
     })
-    .catch((error) => {
+    .catch(error => {
       return Promise.reject(new Error(` request failed: ${error.message}`))
     })
   if (!createToken) {
@@ -45,7 +45,7 @@ export default async function subscribeHandler(
     method: 'POST',
     body: JSON.stringify({
       hub: {
-        callback: 'https://api.mosip.yumeteki.io/webhooks',
+        callback: '', // Insert your webhooks URL here for Verification Request and Event Notification
         mode: 'subscribe',
         secret: SHA_SECRET,
         topic: 'BIRTH_REGISTERED'
@@ -56,10 +56,10 @@ export default async function subscribeHandler(
       Authorization: `Bearer ${createToken.token}`
     }
   })
-    .then((response) => {
+    .then(response => {
       return response
     })
-    .catch((error) => {
+    .catch(error => {
       return Promise.reject(new Error(` request failed: ${error.message}`))
     })
   if (!subscriptionResponse) {
