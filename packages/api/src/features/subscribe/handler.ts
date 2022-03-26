@@ -1,13 +1,13 @@
-import * as Hapi from 'hapi'
+import * as Hapi from '@hapi/hapi'
 import {
   WEBHOOK_URL,
   AUTH_URL,
+  CALLBACK_URL,
   CLIENT_ID,
   CLIENT_SECRET,
   SHA_SECRET
 } from '@api/constants'
 import fetch from 'node-fetch'
-import { resolve } from 'url'
 import { logger } from '@api/logger'
 
 export default async function subscribeHandler(
@@ -20,16 +20,13 @@ export default async function subscribeHandler(
   })
 
   logger.info(`authPayload: ${authPayload}`)
-  const createToken = await fetch(
-    resolve(AUTH_URL, 'authenticateSystemClient'),
-    {
-      method: 'POST',
-      body: authPayload,
-      headers: {
-        'Content-Type': 'application/json'
-      }
+  const createToken = await fetch(AUTH_URL, {
+    method: 'POST',
+    body: authPayload,
+    headers: {
+      'Content-Type': 'application/json'
     }
-  )
+  })
     .then(response => {
       return response.json()
     })
@@ -45,7 +42,7 @@ export default async function subscribeHandler(
     method: 'POST',
     body: JSON.stringify({
       hub: {
-        callback: '', // Insert your webhooks URL here for Verification Request and Event Notification
+        callback: CALLBACK_URL,
         mode: 'subscribe',
         secret: SHA_SECRET,
         topic: 'BIRTH_REGISTERED'

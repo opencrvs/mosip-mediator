@@ -1,7 +1,7 @@
 // tslint:disable-next-line no-var-requires
 require('app-module-path').addPath(require('path').join(__dirname, '../'))
 
-import * as Hapi from 'hapi'
+import * as Hapi from '@hapi/hapi'
 import { HOST, PORT } from '@api/constants'
 import getPlugins from '@api/config/plugins'
 import { getRoutes } from '@api/config/routes'
