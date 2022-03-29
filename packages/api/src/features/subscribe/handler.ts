@@ -8,6 +8,7 @@ import {
   SHA_SECRET
 } from '@api/constants'
 import fetch from 'node-fetch'
+import { resolve } from 'url'
 import { logger } from '@api/logger'
 
 export default async function subscribeHandler(
@@ -20,13 +21,16 @@ export default async function subscribeHandler(
   })
 
   logger.info(`authPayload: ${authPayload}`)
-  const createToken = await fetch(AUTH_URL, {
-    method: 'POST',
-    body: authPayload,
-    headers: {
-      'Content-Type': 'application/json'
+  const createToken = await fetch(
+    resolve(AUTH_URL, 'authenticateSystemClient'),
+    {
+      method: 'POST',
+      body: authPayload,
+      headers: {
+        'Content-Type': 'application/json'
+      }
     }
-  })
+  )
     .then(response => {
       return response.json()
     })

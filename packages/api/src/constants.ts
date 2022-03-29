@@ -30,7 +30,7 @@ export const MOSIP_AUTH_CLIENT = process.env.MOSIP_AUTH_CLIENT || ''
 export const MOSIP_AUTH_USER = process.env.MOSIP_AUTH_USER || ''
 export const MOSIP_AUTH_PASS = process.env.MOSIP_AUTH_PASS || ''
 
-export const SIGN_ALGORITHM = process.env.SIGN_ALGORITHM || 'ECDSA'
+export const SIGN_ALGORITHM = process.env.SIGN_ALGORITHM || 'RSA-SHA256'
 const MOSIP_PUBLIC_KEY_PATH =
   process.env.MOSIP_PUBLIC_KEY_PATH || '/certs/mnt/mosip-public.key'
 const OPENCRVS_PRIV_KEY_PATH =

@@ -24,72 +24,75 @@ export async function birthHandler(
 ) {
   logger.info(`birthHandler has been called with some payload`)
 
-  proxyCallback(request)
+  if (request.payload && request.payload['id']) {
+    proxyCallback(request)
+  }
 
   return h.response().code(200)
 }
 
 async function proxyCallback(request: Hapi.Request) {
   const encryptedData = crypto
-    .publicEncrypt(MOSIP_PUBLIC_KEY, Buffer.from(request.payload.toString()))
+    .publicEncrypt(
+      {
+        key: MOSIP_PUBLIC_KEY,
+        padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+        oaepHash: 'sha256'
+      },
+      Buffer.from(JSON.stringify(request.payload))
+    )
     .toString('base64')
   const sign = crypto
     .sign(SIGN_ALGORITHM, Buffer.from(encryptedData), OPENCRVS_PRIV_KEY)
     .toString('base64')
 
+  logger.info(`Here encrypted data : ${encryptedData}`)
+  logger.info(`Here is the payload id : ${request.payload['id']}`)
+
   const proxyRequest = JSON.stringify({
+    id: request.payload['id'],
     data: encryptedData,
     signature: sign
   })
 
   let authToken
-  try {
-    authToken = await fetch(MOSIP_AUTH_URL, {
-      method: 'POST',
-      body: `client_id=${MOSIP_AUTH_CLIENT}&username=${MOSIP_AUTH_USER}&password=${MOSIP_AUTH_PASS}&grant_type=password`,
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }
-    })
-      .then(response => {
-        return response.json()
-      })
-      .catch(error => {
-        return Promise.reject(error)
-      })
-    if (authToken['access_token'] === undefined) {
-      logger.error(
-        `failed getting mosip auth token. response: ${JSON.stringify(
-          authToken
-        )}`
-      )
-      return
+  authToken = await fetch(MOSIP_AUTH_URL, {
+    method: 'POST',
+    body: `client_id=${MOSIP_AUTH_CLIENT}&username=${MOSIP_AUTH_USER}&password=${MOSIP_AUTH_PASS}&grant_type=password`,
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
     }
-  } catch (error) {
-    logger.error(`failed getting mosip auth token. error: ${error.message}`)
+  })
+    .then(response => {
+      return response.json()
+    })
+    .catch(error => {
+      logger.error(`failed getting mosip auth token. error: ${error.message}`)
+      return undefined
+    })
+  if (authToken === undefined || authToken['access_token'] === undefined) {
+    logger.error(
+      `failed getting mosip auth token. response: ${JSON.stringify(authToken)}`
+    )
     return
   }
 
-  try {
-    const res = await fetch(PROXY_CALLBACK_URL, {
-      method: 'POST',
-      body: proxyRequest,
-      headers: {
-        'Content-Type': 'application/json',
-        cookie: `Authorization=${authToken['access_token']}`
-      }
+  const res = await fetch(PROXY_CALLBACK_URL, {
+    method: 'POST',
+    body: proxyRequest,
+    headers: {
+      'Content-Type': 'application/json',
+      cookie: `Authorization=${authToken['access_token']}`
+    }
+  })
+    .then(response => {
+      return response.text()
     })
-      .then(response => {
-        return response.text()
-      })
-      .catch(error => {
-        return Promise.reject(error)
-      })
-    logger.info(`Received Response From Mosip: ${res}`)
-  } catch (error) {
-    logger.error(`failed sending data to mosip: ${error.message}`)
-    return
-  }
+    .catch(error => {
+      logger.error(`failed sending data to mosip: ${error.message}`)
+      return undefined
+    })
+  logger.info(`Sent data to Mosip. Response: ${res}`)
 }
 
 export async function subscriptionConfirmationHandler(
@@ -113,11 +116,4 @@ export async function subscriptionConfirmationHandler(
   } else {
     return h.response({ challenge: decodeURIComponent(challenge) }).code(200)
   }
-}
-
-export async function receiveNidHandler(
-  request: Hapi.Request,
-  h: Hapi.ResponseToolkit
-) {
-  return h.response().code(200)
 }

@@ -1,9 +1,9 @@
 import subscribeHandler from '@api/features/subscribe/handler'
 import {
   birthHandler,
-  subscriptionConfirmationHandler,
-  receiveNidHandler
+  subscriptionConfirmationHandler
 } from '@api/features/webhooks/handler'
+import { receiveNidHandler } from '@api/features/receive/handler'
 
 export const getRoutes = () => {
   const routes = [
