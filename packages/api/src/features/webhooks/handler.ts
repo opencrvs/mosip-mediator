@@ -3,8 +3,11 @@ import * as crypto from 'crypto'
 import fetch from 'node-fetch'
 import { logger } from '@api/logger'
 import {
+  KEY_SPLITTER,
+  VERSION_RSA_2048,
   PROXY_CALLBACK_URL,
   SIGN_ALGORITHM,
+  SYMMETRIC_ENCRYPT_ALGORITHM,
   MOSIP_PUBLIC_KEY,
   OPENCRVS_PRIV_KEY,
   MOSIP_AUTH_URL,
@@ -32,27 +35,46 @@ export async function birthHandler(
 }
 
 async function proxyCallback(request: Hapi.Request) {
-  const encryptedData = crypto
-    .publicEncrypt(
-      {
-        key: MOSIP_PUBLIC_KEY,
-        padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
-        oaepHash: 'sha256'
-      },
-      Buffer.from(JSON.stringify(request.payload))
-    )
-    .toString('base64')
-  const sign = crypto
-    .sign(SIGN_ALGORITHM, Buffer.from(encryptedData), OPENCRVS_PRIV_KEY)
-    .toString('base64')
-
-  logger.info(`Here encrypted data : ${encryptedData}`)
   logger.info(`Here is the payload id : ${request.payload['id']}`)
+  const keyHeader: Buffer = Buffer.from(VERSION_RSA_2048)
+  const keySplitter: Buffer = Buffer.from(KEY_SPLITTER)
+  const symmetricKey: Buffer = crypto.randomBytes(32)
+  const nonce: Buffer = crypto.randomBytes(12)
+  const aad: Buffer = crypto.randomBytes(20)
+  const encryptedSymmetricKey: Buffer = crypto.publicEncrypt(
+    {
+      key: MOSIP_PUBLIC_KEY,
+      padding: crypto.constants.RSA_PKCS1_PADDING
+    },
+    symmetricKey
+  )
+  const cipher = crypto
+    .createCipheriv(SYMMETRIC_ENCRYPT_ALGORITHM, symmetricKey, nonce)
+    .setAAD(Buffer.concat([nonce, aad]), { plaintextLength: 16 })
+  const encryptedPayload = Buffer.concat([
+    cipher.update(Buffer.from(JSON.stringify(request.payload))),
+    cipher.final()
+  ])
+  const encryptedData = Buffer.concat([
+    keyHeader,
+    encryptedSymmetricKey,
+    keySplitter,
+    nonce,
+    aad,
+    encryptedPayload,
+    cipher.getAuthTag()
+  ])
+
+  const sign = crypto.sign(
+    SIGN_ALGORITHM,
+    Buffer.from(encryptedData),
+    OPENCRVS_PRIV_KEY
+  )
 
   const proxyRequest = JSON.stringify({
     id: request.payload['id'],
-    data: encryptedData,
-    signature: sign
+    data: encryptedData.toString('base64'),
+    signature: sign.toString('base64')
   })
 
   let authToken
