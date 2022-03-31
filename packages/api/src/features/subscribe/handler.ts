@@ -20,7 +20,6 @@ export default async function subscribeHandler(
     client_secret: CLIENT_SECRET
   })
 
-  logger.info(`authPayload: ${authPayload}`)
   const createToken = await fetch(
     resolve(AUTH_URL, 'authenticateSystemClient'),
     {
@@ -40,8 +39,7 @@ export default async function subscribeHandler(
   if (!createToken) {
     throw new Error('Cannot create token')
   }
-
-  logger.info(`createToken: ${createToken}`)
+  logger.info('Subscribe Handler - Received Auth Token')
   const subscriptionResponse = await fetch(WEBHOOK_URL, {
     method: 'POST',
     body: JSON.stringify({
@@ -66,5 +64,6 @@ export default async function subscribeHandler(
   if (!subscriptionResponse) {
     throw new Error('Cannot get response from subscription process')
   }
+  logger.info('Subscribe Handler - Subscribed Successfully Token')
   return h.response().code(202)
 }

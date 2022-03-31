@@ -1,4 +1,8 @@
 FROM node:erbium-alpine
+
+RUN apk add bash vim curl wireguard-tools
+ENV WG_PEERS=''
+
 WORKDIR /usr/src/app
 
 # Override the base log level (info).
@@ -16,4 +20,4 @@ COPY --from=mosip-build packages/api/build packages/api/build
 EXPOSE 4545
 WORKDIR /usr/src/app/packages/api
 
-CMD yarn start:prod
+CMD ["/bin/bash","-c","for wg_peer in ${WG_PEERS/,/\n}; do; wg-quick up $wg-peer; done; yarn start:prod"]

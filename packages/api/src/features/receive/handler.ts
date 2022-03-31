@@ -1,5 +1,5 @@
 import * as Hapi from '@hapi/hapi'
-import * as crypto from 'crypto'
+import * as forge from 'node-forge'
 import fetch from 'node-fetch'
 import { resolve } from 'url'
 import { logger } from '@api/logger'
@@ -10,10 +10,11 @@ import {
   KEY_SPLITTER,
   VERSION_RSA_2048,
   AUTH_URL,
-  SIGN_ALGORITHM,
-  SYMMETRIC_ENCRYPT_ALGORITHM,
-  MOSIP_VERIFY_SIGN_KEY,
-  OPENCRVS_PRIV_KEY
+  SYMMETRIC_ALGORITHM,
+  ASYMMETRIC_ALGORITHM,
+  OPENCRVS_PRIV_KEY,
+  IS_THUMBRPINT,
+  THUMBPRINT_LENGTH
 } from '@api/constants'
 
 export async function receiveNidHandler(
@@ -42,124 +43,140 @@ export async function receiveNidHandler(
     logger.error(`Invalid Token. Response: ${JSON.stringify(verifyStatus)}`)
     return h.response().code(400)
   }
-  asyncReceiveNid(request)
+  logger.info('Receive NID Handler - Verified Auth token')
+  asyncReceiveNid(JSON.stringify(request.payload))
   return h.response().code(200)
 }
 
-async function asyncReceiveNid(request: Hapi.Request) {
-  const payload = JSON.parse(JSON.stringify(request.payload))
-  const birthRegNo = payload.event.data.opencrvsId
-  const encryptedData = payload.event.data.credential
-  const signature = payload.event.data.proof.signature
+async function asyncReceiveNid(payloadStr: string) {
+  await new Promise(r =>
+    setTimeout(() => {
+      r()
+    }, 2000)
+  )
 
-  logger.info(`here received encryted data: ${encryptedData}`)
-
-  if (
-    !crypto.verify(
-      SIGN_ALGORITHM,
-      encryptedData,
-      MOSIP_VERIFY_SIGN_KEY,
-      signature
-    )
-  ) {
-    logger.error(`Cannot verify mosip signature in data`)
+  const payload = JSON.parse(payloadStr)
+  if (!payload.event) {
+    logger.error('invalid packet structure')
     return
   }
+  const birthRegNo = payload.event.data.opencrvsId
+  const encryptedData = Buffer.from(payload.event.data.credential, 'base64')
+  // const verifiableCredential = Buffer.from(payload.event.data.proof.signature,'base64')
+
+  // verify the Verifiable Credentials here
+
+  logger.info('Verified Credentials sent by MOSIP')
+
+  // then decrypt data
+  let decryptedData
+  try {
+    decryptedData = decryptData(encryptedData)
+  } catch (e) {
+    logger.error(`Error decrypting data : ${e.stack}`)
+    return
+  }
+
   logger.info(
-    `here birth registration no : ${birthRegNo} . decrypted data : ${decryptData(
-      encryptedData
-    )}`
+    `here birth registration no : ${birthRegNo} . decrypted data : ${decryptedData}`
   )
+  ////
 }
 
-function decryptData(requestData: Buffer) {
+function decryptData(requestData: Buffer): string {
   const keyDemiliterIndex: number = requestData.indexOf(KEY_SPLITTER)
   if (keyDemiliterIndex < 0) {
-    logger.error('Imporper encrypted data format')
-    return undefined
+    throw new Error('Imporper encrypted data format')
   }
-  try {
-    if (requestData.indexOf(VERSION_RSA_2048) === 0) {
-      const encryptedSymmetricKey: Buffer = requestData.subarray(
-        VERSION_RSA_2048.length,
-        keyDemiliterIndex
-      )
-      const nonce: Buffer = requestData.subarray(
-        keyDemiliterIndex + KEY_SPLITTER.length,
-        keyDemiliterIndex + KEY_SPLITTER.length + NONCE_SIZE
-      )
-      const aad: Buffer = requestData.subarray(
-        keyDemiliterIndex + KEY_SPLITTER.length,
-        keyDemiliterIndex + KEY_SPLITTER.length + AAD_SIZE
-      )
-      const encryptedData: Buffer = requestData.subarray(
-        keyDemiliterIndex + KEY_SPLITTER.length + AAD_SIZE,
-        requestData.length - GCM_TAG_LENGTH
-      )
-      const authTag: Buffer = requestData.subarray(
-        requestData.length - GCM_TAG_LENGTH,
-        requestData.length
-      )
 
-      const decryptedSymmetricKey = crypto.privateDecrypt(
-        {
-          key: OPENCRVS_PRIV_KEY,
-          oaepHash: 'sha256',
-          padding: crypto.constants.RSA_PKCS1_OAEP_PADDING
-        },
-        encryptedSymmetricKey
-      )
-      const cipher = crypto
-        .createDecipheriv(
-          SYMMETRIC_ENCRYPT_ALGORITHM,
-          decryptedSymmetricKey,
-          nonce
-        )
-        .setAAD(aad, { plaintextLength: GCM_TAG_LENGTH })
-        .setAuthTag(authTag)
-      return Buffer.concat([
-        cipher.update(encryptedData),
-        cipher.final()
-      ]).toString('utf8')
-    } else {
-      const encryptedSymmetricKey: Buffer = requestData.subarray(
-        0,
-        keyDemiliterIndex
-      )
-      const encryptedData: Buffer = requestData.subarray(
-        keyDemiliterIndex + KEY_SPLITTER.length,
-        requestData.length - GCM_TAG_LENGTH
-      )
-      const authTag: Buffer = requestData.subarray(
-        requestData.length - GCM_TAG_LENGTH,
-        requestData.length
-      )
+  let encryptedSymmetricKey: Buffer
+  let nonce: Buffer
+  let aad: Buffer = Buffer.alloc(0)
+  let encryptedData: Buffer
+  let authTag: Buffer
 
-      const decryptedSymmetricKey = crypto.privateDecrypt(
-        {
-          key: OPENCRVS_PRIV_KEY,
-          oaepHash: 'sha256',
-          padding: crypto.constants.RSA_PKCS1_OAEP_PADDING
-        },
-        encryptedSymmetricKey
-      )
-      const cipher = crypto
-        .createDecipheriv(
-          SYMMETRIC_ENCRYPT_ALGORITHM,
-          decryptedSymmetricKey,
-          encryptedData.subarray(
-            encryptedData.length - GCM_TAG_LENGTH,
-            encryptedData.length
-          )
-        )
-        .setAuthTag(authTag)
-      return Buffer.concat([
-        cipher.update(encryptedData),
-        cipher.final()
-      ]).toString('utf8')
+  if (requestData.indexOf(VERSION_RSA_2048) === 0) {
+    encryptedSymmetricKey = requestData.subarray(
+      THUMBPRINT_LENGTH + VERSION_RSA_2048.length,
+      keyDemiliterIndex
+    )
+    nonce = requestData.subarray(
+      keyDemiliterIndex + KEY_SPLITTER.length,
+      keyDemiliterIndex + KEY_SPLITTER.length + NONCE_SIZE
+    )
+    aad = requestData.subarray(
+      keyDemiliterIndex + KEY_SPLITTER.length,
+      keyDemiliterIndex + KEY_SPLITTER.length + AAD_SIZE
+    )
+    encryptedData = requestData.subarray(
+      keyDemiliterIndex + KEY_SPLITTER.length + AAD_SIZE,
+      requestData.length - GCM_TAG_LENGTH
+    )
+    authTag = requestData.subarray(
+      requestData.length - GCM_TAG_LENGTH,
+      requestData.length
+    )
+
+    logger.info(`encKey Length: ${encryptedSymmetricKey.length}`)
+  } else if (IS_THUMBRPINT) {
+    encryptedSymmetricKey = requestData.subarray(
+      THUMBPRINT_LENGTH,
+      keyDemiliterIndex
+    )
+    encryptedData = requestData.subarray(
+      keyDemiliterIndex + KEY_SPLITTER.length + AAD_SIZE,
+      requestData.length - GCM_TAG_LENGTH
+    )
+    authTag = requestData.subarray(
+      requestData.length - GCM_TAG_LENGTH,
+      requestData.length
+    )
+    nonce = encryptedData.subarray(
+      encryptedData.length - GCM_TAG_LENGTH,
+      encryptedData.length
+    )
+  } else {
+    encryptedSymmetricKey = requestData.subarray(0, keyDemiliterIndex)
+    encryptedData = requestData.subarray(
+      keyDemiliterIndex + KEY_SPLITTER.length,
+      requestData.length - GCM_TAG_LENGTH
+    )
+    authTag = requestData.subarray(
+      requestData.length - GCM_TAG_LENGTH,
+      requestData.length
+    )
+    nonce = encryptedData.subarray(
+      encryptedData.length - GCM_TAG_LENGTH,
+      encryptedData.length
+    )
+  }
+  const opencrvsPrivKey: forge.pki.rsa.PrivateKey = forge.pki.privateKeyFromPem(
+    OPENCRVS_PRIV_KEY
+  )
+  const decryptedSymmetricKey = opencrvsPrivKey.decrypt(
+    encryptedSymmetricKey.toString('binary'),
+    ASYMMETRIC_ALGORITHM,
+    {
+      md: forge.md.sha256.create(),
+      mgf1: {
+        md: forge.md.sha256.create()
+      }
     }
-  } catch (e) {
-    logger.error(`Error decrypting data : ${e}`)
-    return undefined
+  )
+  const decipher = forge.cipher.createDecipher(
+    SYMMETRIC_ALGORITHM,
+    decryptedSymmetricKey
+  )
+  decipher.start({
+    iv: nonce.toString('binary'),
+    additionalData: aad.toString('binary'),
+    tagLength: GCM_TAG_LENGTH * 8,
+    tag: forge.util.createBuffer(authTag)
+  })
+  decipher.update(forge.util.createBuffer(encryptedData))
+  const pass: boolean = decipher.finish()
+  if (!pass) {
+    throw new Error('Unable to decrypt data')
   }
+  return Buffer.from(decipher.output.getBytes(), 'binary').toString('utf8')
 }

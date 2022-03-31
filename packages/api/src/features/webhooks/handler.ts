@@ -1,13 +1,17 @@
 import * as Hapi from '@hapi/hapi'
-import * as crypto from 'crypto'
 import fetch from 'node-fetch'
+import * as forge from 'node-forge'
 import { logger } from '@api/logger'
 import {
+  NONCE_SIZE,
+  AAD_SIZE,
+  GCM_TAG_LENGTH,
   KEY_SPLITTER,
   VERSION_RSA_2048,
   PROXY_CALLBACK_URL,
-  SIGN_ALGORITHM,
-  SYMMETRIC_ENCRYPT_ALGORITHM,
+  ASYMMETRIC_ALGORITHM,
+  SYMMETRIC_ALGORITHM,
+  SYMMETRIC_KEY_SIZE,
   MOSIP_PUBLIC_KEY,
   OPENCRVS_PRIV_KEY,
   MOSIP_AUTH_URL,
@@ -21,64 +25,37 @@ interface IRequestParams {
   [key: string]: string
 }
 
-export async function birthHandler(
+export async function webhooksHandler(
   request: Hapi.Request,
   h: Hapi.ResponseToolkit
 ) {
   logger.info(`birthHandler has been called with some payload`)
 
   if (request.payload && request.payload['id']) {
-    proxyCallback(request)
+    proxyCallback(request.payload['id'], JSON.stringify(request.payload))
   }
 
   return h.response().code(200)
 }
 
-async function proxyCallback(request: Hapi.Request) {
-  logger.info(`Here is the payload id : ${request.payload['id']}`)
-  const keyHeader: Buffer = Buffer.from(VERSION_RSA_2048)
-  const keySplitter: Buffer = Buffer.from(KEY_SPLITTER)
-  const symmetricKey: Buffer = crypto.randomBytes(32)
-  const nonce: Buffer = crypto.randomBytes(12)
-  const aad: Buffer = crypto.randomBytes(20)
-  const encryptedSymmetricKey: Buffer = crypto.publicEncrypt(
-    {
-      key: MOSIP_PUBLIC_KEY,
-      padding: crypto.constants.RSA_PKCS1_PADDING
-    },
-    symmetricKey
-  )
-  const cipher = crypto
-    .createCipheriv(SYMMETRIC_ENCRYPT_ALGORITHM, symmetricKey, nonce)
-    .setAAD(Buffer.concat([nonce, aad]), { plaintextLength: 16 })
-  const encryptedPayload = Buffer.concat([
-    cipher.update(Buffer.from(JSON.stringify(request.payload))),
-    cipher.final()
-  ])
-  const encryptedData = Buffer.concat([
-    keyHeader,
-    encryptedSymmetricKey,
-    keySplitter,
-    nonce,
-    aad,
-    encryptedPayload,
-    cipher.getAuthTag()
-  ])
-
-  const sign = crypto.sign(
-    SIGN_ALGORITHM,
-    Buffer.from(encryptedData),
-    OPENCRVS_PRIV_KEY
+async function proxyCallback(id: string, payload: string) {
+  await new Promise(r =>
+    setTimeout(() => {
+      r()
+    }, 2000)
   )
 
-  const proxyRequest = JSON.stringify({
-    id: request.payload['id'],
-    data: encryptedData.toString('base64'),
-    signature: sign.toString('base64')
-  })
+  let proxyRequest
+  try {
+    proxyRequest = encryptAndSign(id, payload)
+  } catch (e) {
+    logger.error(`Error encrypting and signing data: ${e.stack}`)
+    return
+  }
 
-  let authToken
-  authToken = await fetch(MOSIP_AUTH_URL, {
+  logger.info(`Encryting Payload Complete. Here is the payload id : ${id}`)
+
+  const authToken = await fetch(MOSIP_AUTH_URL, {
     method: 'POST',
     body: `client_id=${MOSIP_AUTH_CLIENT}&username=${MOSIP_AUTH_USER}&password=${MOSIP_AUTH_PASS}&grant_type=password`,
     headers: {
@@ -99,6 +76,8 @@ async function proxyCallback(request: Hapi.Request) {
     return
   }
 
+  logger.info(`ID - ${id}. Received MOSIP Auth token`)
+
   const res = await fetch(PROXY_CALLBACK_URL, {
     method: 'POST',
     body: proxyRequest,
@@ -114,7 +93,64 @@ async function proxyCallback(request: Hapi.Request) {
       logger.error(`failed sending data to mosip: ${error.message}`)
       return undefined
     })
-  logger.info(`Sent data to Mosip. Response: ${res}`)
+  logger.info(`ID - ${id}. Sent data to Mosip. Response: ${res}`)
+}
+
+function encryptAndSign(payId: string, requestData: string): string {
+  const opencrvsPrivateKey: forge.pki.rsa.PrivateKey = forge.pki.privateKeyFromPem(
+    OPENCRVS_PRIV_KEY
+  )
+  const mosipPublicKey: forge.pki.rsa.PublicKey = forge.pki.certificateFromPem(
+    MOSIP_PUBLIC_KEY
+  ).publicKey as forge.pki.rsa.PublicKey
+
+  const symmetricKey: string = forge.random.getBytesSync(SYMMETRIC_KEY_SIZE)
+  const nonce: string = forge.random.getBytesSync(NONCE_SIZE)
+  const aad: string = forge.random.getBytesSync(AAD_SIZE - NONCE_SIZE)
+
+  const encryptedSymmetricKey: string = mosipPublicKey.encrypt(
+    symmetricKey,
+    ASYMMETRIC_ALGORITHM,
+    {
+      md: forge.md.sha256.create(),
+      mgf1: {
+        md: forge.md.sha256.create()
+      }
+    }
+  )
+  const encryptCipher = forge.cipher.createCipher(
+    SYMMETRIC_ALGORITHM,
+    symmetricKey
+  )
+  encryptCipher.start({
+    iv: nonce,
+    additionalData: nonce + aad,
+    tagLength: GCM_TAG_LENGTH * 8
+  })
+  encryptCipher.update(forge.util.createBuffer(requestData))
+  encryptCipher.finish()
+  const encryptedData = Buffer.concat([
+    Buffer.from(VERSION_RSA_2048),
+    Buffer.from(encryptedSymmetricKey, 'binary'),
+    Buffer.from(KEY_SPLITTER),
+    Buffer.from(
+      nonce +
+        aad +
+        encryptCipher.output.getBytes() +
+        encryptCipher.mode.tag.getBytes(),
+      'binary'
+    )
+  ])
+
+  const digestSign = forge.md.sha256.create()
+  digestSign.update(encryptedData.toString('binary'))
+  const sign = opencrvsPrivateKey.sign(digestSign)
+
+  return JSON.stringify({
+    id: payId,
+    data: encryptedData.toString('base64'),
+    signature: forge.util.encode64(sign)
+  })
 }
 
 export async function subscriptionConfirmationHandler(

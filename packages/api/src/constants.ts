@@ -32,24 +32,23 @@ export const MOSIP_AUTH_PASS = process.env.MOSIP_AUTH_PASS || ''
 
 export const KEY_SPLITTER = '#KEY_SPLITTER#'
 export const VERSION_RSA_2048 = 'VER_R2'
-export const SIGN_ALGORITHM = 'RSA-SHA256'
-export const SYMMETRIC_ENCRYPT_ALGORITHM = 'aes-256-gcm'
+// export const SIGN_ALGORITHM = 'RSA-SHA256'
+export const SYMMETRIC_ALGORITHM = 'AES-GCM'
+export const ASYMMETRIC_ALGORITHM = 'RSA-OAEP'
+export const SYMMETRIC_KEY_SIZE: number = 32
 export const NONCE_SIZE: number = 12
 export const AAD_SIZE: number = 32
 export const GCM_TAG_LENGTH: number = 16
+
+export const IS_THUMBRPINT: boolean =
+  process.env.IS_THUMBRPINT !== 'true' ? false : true
+export const THUMBPRINT_LENGTH: number = 32
+
 // export const ASYMMETRIC_ENCRYPT_ALGORITHM = 'RSA/ECB/PKCS1Padding'
 const MOSIP_PUBLIC_KEY_PATH =
   process.env.MOSIP_PUBLIC_KEY_PATH || '/certs/mnt/mosip-public.key'
 const OPENCRVS_PRIV_KEY_PATH =
   process.env.OPENCRVS_PRIV_KEY_PATH || '/certs/mnt/opencrvs-priv.key'
-const MOSIP_VERIFY_SIGN_KEY_PATH =
-  process.env.MOSIP_VERIFY_SIGN_KEY_PATH || '/certs/mnt/mosip-verify-sign.key'
-if (!fs.existsSync(MOSIP_VERIFY_SIGN_KEY_PATH)) {
-  logger.error(
-    `Cannot find mosip verify sign key at: ${MOSIP_VERIFY_SIGN_KEY_PATH}`
-  )
-  process.exit(1)
-}
 if (!fs.existsSync(MOSIP_PUBLIC_KEY_PATH)) {
   logger.error(`Cannot find mosip public key at: ${MOSIP_PUBLIC_KEY_PATH}`)
   process.exit(1)
@@ -58,6 +57,9 @@ if (!fs.existsSync(OPENCRVS_PRIV_KEY_PATH)) {
   logger.error(`Cannot find opencrvs priv key at: ${OPENCRVS_PRIV_KEY_PATH}`)
   process.exit(1)
 }
-export const MOSIP_VERIFY_SIGN_KEY = fs.readFileSync(MOSIP_VERIFY_SIGN_KEY_PATH)
-export const MOSIP_PUBLIC_KEY = fs.readFileSync(MOSIP_PUBLIC_KEY_PATH)
-export const OPENCRVS_PRIV_KEY = fs.readFileSync(OPENCRVS_PRIV_KEY_PATH)
+export const MOSIP_PUBLIC_KEY: string = fs
+  .readFileSync(MOSIP_PUBLIC_KEY_PATH)
+  .toString('utf8')
+export const OPENCRVS_PRIV_KEY: string = fs
+  .readFileSync(OPENCRVS_PRIV_KEY_PATH)
+  .toString('utf8')

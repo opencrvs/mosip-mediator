@@ -1,6 +1,6 @@
 import subscribeHandler from '@api/features/subscribe/handler'
 import {
-  birthHandler,
+  webhooksHandler,
   subscriptionConfirmationHandler
 } from '@api/features/webhooks/handler'
 import { receiveNidHandler } from '@api/features/receive/handler'
@@ -34,8 +34,8 @@ export const getRoutes = () => {
     },
     {
       method: 'POST',
-      path: '/birth',
-      handler: birthHandler,
+      path: '/webhooks',
+      handler: webhooksHandler,
       config: {
         auth: false,
         tags: ['api']
@@ -43,7 +43,7 @@ export const getRoutes = () => {
     },
     {
       method: 'GET',
-      path: '/birth',
+      path: '/webhooks',
       handler: subscriptionConfirmationHandler,
       config: {
         auth: false,
