@@ -24,7 +24,10 @@ export const CLIENT_SECRET =
   get('CLIENT_SECRET') || (process.env.CLIENT_SECRET as string)
 export const SHA_SECRET =
   get('SHA_SECRET') || (process.env.SHA_SECRET as string)
-export const PROXY_CALLBACK_URL = process.env.PROXY_CALLBACK_URL || '' // Insert your URL here to which the event has to be proxied to
+export const MOSIP_BIRTH_PROXY_CALLBACK_URL =
+  process.env.MOSIP_BIRTH_PROXY_CALLBACK_URL || '' // Insert your URL here to which the birth event has to be proxied to
+export const MOSIP_DEATH_PROXY_CALLBACK_URL =
+  process.env.MOSIP_DEATH_PROXY_CALLBACK_URL || '' // Insert your URL here to which the death event has to be proxied to
 export const MOSIP_AUTH_URL = process.env.MOSIP_AUTH_URL || ''
 export const MOSIP_AUTH_CLIENT = process.env.MOSIP_AUTH_CLIENT || ''
 export const MOSIP_AUTH_USER = process.env.MOSIP_AUTH_USER || ''

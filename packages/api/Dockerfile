@@ -20,4 +20,4 @@ COPY --from=mosip-build packages/api/build packages/api/build
 EXPOSE 4545
 WORKDIR /usr/src/app/packages/api
 
-CMD ["/bin/bash","-c","for wg_peer in ${WG_PEERS/,/\n}; do; wg-quick up $wg-peer; done; yarn start:prod"]
+CMD ["/bin/bash","-c","for wg_peer in ${WG_PEERS/,/\n}; do wg-quick up $wg_peer; done; yarn start:prod"]

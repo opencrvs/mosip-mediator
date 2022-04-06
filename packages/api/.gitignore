@@ -10,6 +10,7 @@
 /build
 
 certs
+cards
 
 # misc
 .DS_Store

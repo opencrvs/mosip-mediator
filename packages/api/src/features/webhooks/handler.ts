@@ -8,7 +8,8 @@ import {
   GCM_TAG_LENGTH,
   KEY_SPLITTER,
   VERSION_RSA_2048,
-  PROXY_CALLBACK_URL,
+  MOSIP_BIRTH_PROXY_CALLBACK_URL,
+  MOSIP_DEATH_PROXY_CALLBACK_URL,
   ASYMMETRIC_ALGORITHM,
   SYMMETRIC_ALGORITHM,
   SYMMETRIC_KEY_SIZE,
@@ -32,13 +33,33 @@ export async function webhooksHandler(
   logger.info(`birthHandler has been called with some payload`)
 
   if (request.payload && request.payload['id']) {
-    proxyCallback(request.payload['id'], JSON.stringify(request.payload))
+    const pay = JSON.parse(JSON.stringify(request.payload))
+    let sendingUrl
+    if (pay.event && pay.event.hub && pay.event.hub.topic) {
+      if (pay.event.hub.topic === 'BIRTH_REGISTERED') {
+        sendingUrl = MOSIP_BIRTH_PROXY_CALLBACK_URL
+      } else if (pay.event.hub.topic === 'DEATH_REGISTERED') {
+        sendingUrl = MOSIP_DEATH_PROXY_CALLBACK_URL
+      } else {
+        sendingUrl = ''
+      }
+    } else {
+      logger.error('{"message":"Error Parsing event hub topic"}\n')
+      return h
+        .response('{"message":"Error Parsing event hub topic"}\n')
+        .code(500)
+    }
+    proxyCallback(
+      request.payload['id'],
+      JSON.stringify(request.payload),
+      sendingUrl
+    )
   }
 
   return h.response().code(200)
 }
 
-async function proxyCallback(id: string, payload: string) {
+async function proxyCallback(id: string, payload: string, sendingUrl: string) {
   await new Promise(r =>
     setTimeout(() => {
       r()
@@ -78,7 +99,7 @@ async function proxyCallback(id: string, payload: string) {
 
   logger.info(`ID - ${id}. Received MOSIP Auth token`)
 
-  const res = await fetch(PROXY_CALLBACK_URL, {
+  const res = await fetch(sendingUrl, {
     method: 'POST',
     body: proxyRequest,
     headers: {
@@ -168,7 +189,7 @@ export async function subscriptionConfirmationHandler(
     mode !== 'subscribe' ||
     !challenge ||
     !topic ||
-    topic !== 'BIRTH_REGISTERED'
+    !(topic === 'BIRTH_REGISTERED' || topic === 'DEATH_REGISTERED')
   ) {
     throw new Error('Params incorrect')
   } else {

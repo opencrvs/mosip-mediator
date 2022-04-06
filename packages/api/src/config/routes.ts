@@ -58,6 +58,16 @@ export const getRoutes = () => {
         auth: false,
         tags: ['api']
       }
+    },
+    {
+      method: 'GET',
+      path: '/getCards/{params*}',
+      handler: {
+        directory: {
+          path: 'cards',
+          listing: true
+        }
+      }
     }
   ]
   return routes

@@ -40,7 +40,7 @@ export default async function subscribeHandler(
     throw new Error('Cannot create token')
   }
   logger.info('Subscribe Handler - Received Auth Token')
-  const subscriptionResponse = await fetch(WEBHOOK_URL, {
+  const birthSubscriptionResponse = await fetch(WEBHOOK_URL, {
     method: 'POST',
     body: JSON.stringify({
       hub: {
@@ -61,7 +61,33 @@ export default async function subscribeHandler(
     .catch(error => {
       return Promise.reject(new Error(` request failed: ${error.message}`))
     })
-  if (!subscriptionResponse) {
+  if (!birthSubscriptionResponse) {
+    throw new Error('Cannot get response from subscription process')
+  }
+
+  // Death Subscription
+  const deathSubscriptionResponse = await fetch(WEBHOOK_URL, {
+    method: 'POST',
+    body: JSON.stringify({
+      hub: {
+        callback: CALLBACK_URL,
+        mode: 'subscribe',
+        secret: SHA_SECRET,
+        topic: 'DEATH_REGISTERED'
+      }
+    }),
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${createToken.token}`
+    }
+  })
+    .then(response => {
+      return response
+    })
+    .catch(error => {
+      return Promise.reject(new Error(` request failed: ${error.message}`))
+    })
+  if (!deathSubscriptionResponse) {
     throw new Error('Cannot get response from subscription process')
   }
   logger.info('Subscribe Handler - Subscribed Successfully Token')

@@ -1,6 +1,7 @@
 import * as Hapi from '@hapi/hapi'
 import * as forge from 'node-forge'
 import fetch from 'node-fetch'
+import * as fs from 'fs'
 import { resolve } from 'url'
 import { logger } from '@api/logger'
 import {
@@ -69,7 +70,7 @@ async function asyncReceiveNid(payloadStr: string) {
   logger.info('Verified Credentials sent by MOSIP')
 
   // then decrypt data
-  let decryptedData
+  let decryptedData: string
   try {
     decryptedData = decryptData(encryptedData)
   } catch (e) {
@@ -77,10 +78,24 @@ async function asyncReceiveNid(payloadStr: string) {
     return
   }
 
+  ////
   logger.info(
     `here birth registration no : ${birthRegNo} . decrypted data : ${decryptedData}`
   )
-  ////
+  fs.readFile('cards/.template.html', 'utf8', (err, data) => {
+    if (err) {
+      logger.error(`ID - ${birthRegNo}. Error reading from file: ${err.stack}`)
+      return
+    }
+    const result = data
+      .replace(/\$\!CRVSID/g, birthRegNo)
+      .replace(/\$\!UIN/g, JSON.parse(decryptedData).credentialSubject.UIN)
+    fs.writeFile(`cards/${birthRegNo}.html`, result, 'utf8', err2 => {
+      if (err2) {
+        logger.error(`ID - ${birthRegNo}. Error Writing to file: ${err2.stack}`)
+      }
+    })
+  })
 }
 
 function decryptData(requestData: Buffer): string {
