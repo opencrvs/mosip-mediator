@@ -32,7 +32,7 @@ export async function webhooksHandler(
 ) {
   logger.info(`birthHandler has been called with some payload`)
 
-  if (request.payload && request.payload['id']) {
+  if (request.payload) {
     const pay = JSON.parse(JSON.stringify(request.payload))
     let sendingUrl
     if (pay.event && pay.event.hub && pay.event.hub.topic) {
@@ -49,11 +49,25 @@ export async function webhooksHandler(
         .response('{"message":"Error Parsing event hub topic"}\n')
         .code(500)
     }
-    proxyCallback(
-      request.payload['id'],
-      JSON.stringify(request.payload),
-      sendingUrl
-    )
+    let payId: string = ''
+    try {
+      const entries = pay.event.context[0].entry
+      for (const entry of entries) {
+        if (
+          entry.resource.resourceType.toUpperCase() === 'Task'.toUpperCase()
+        ) {
+          payId = entry.resource.focus.reference.split('/')[1]
+          break
+        }
+      }
+      if (!payId) {
+        return h.response().code(500)
+      }
+    } catch (e) {
+      return h.response().code(500)
+    }
+    logger.info(`ID - ${payId}. Able to get txnId`)
+    proxyCallback(payId, JSON.stringify(request.payload), sendingUrl)
   }
 
   return h.response().code(200)
