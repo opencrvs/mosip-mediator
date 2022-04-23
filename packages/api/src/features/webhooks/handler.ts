@@ -16,7 +16,8 @@ import {
   MOSIP_PUBLIC_KEY,
   OPENCRVS_PRIV_KEY,
   MOSIP_AUTH_URL,
-  MOSIP_AUTH_CLIENT,
+  MOSIP_AUTH_CLIENT_ID,
+  MOSIP_AUTH_CLIENT_SECRET,
   MOSIP_AUTH_USER,
   MOSIP_AUTH_PASS
 } from '@api/constants'
@@ -92,7 +93,7 @@ async function proxyCallback(id: string, payload: string, sendingUrl: string) {
 
   const authToken = await fetch(MOSIP_AUTH_URL, {
     method: 'POST',
-    body: `client_id=${MOSIP_AUTH_CLIENT}&username=${MOSIP_AUTH_USER}&password=${MOSIP_AUTH_PASS}&grant_type=password`,
+    body: `client_id=${MOSIP_AUTH_CLIENT_ID}&client_secret=${MOSIP_AUTH_CLIENT_SECRET}&username=${MOSIP_AUTH_USER}&password=${MOSIP_AUTH_PASS}&grant_type=password`,
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded'
     }

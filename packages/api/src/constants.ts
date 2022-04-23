@@ -29,7 +29,9 @@ export const MOSIP_BIRTH_PROXY_CALLBACK_URL =
 export const MOSIP_DEATH_PROXY_CALLBACK_URL =
   process.env.MOSIP_DEATH_PROXY_CALLBACK_URL || '' // Insert your URL here to which the death event has to be proxied to
 export const MOSIP_AUTH_URL = process.env.MOSIP_AUTH_URL || ''
-export const MOSIP_AUTH_CLIENT = process.env.MOSIP_AUTH_CLIENT || ''
+export const MOSIP_AUTH_CLIENT_ID = process.env.MOSIP_AUTH_CLIENT_ID || ''
+export const MOSIP_AUTH_CLIENT_SECRET =
+  process.env.MOSIP_AUTH_CLIENT_SECRET || ''
 export const MOSIP_AUTH_USER = process.env.MOSIP_AUTH_USER || ''
 export const MOSIP_AUTH_PASS = process.env.MOSIP_AUTH_PASS || ''
 
