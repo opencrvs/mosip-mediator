@@ -1,3 +1,4 @@
+import { CARDS_PATH_PREFIX } from '@api/constants'
 import subscribeHandler from '@api/features/subscribe/handler'
 import {
   webhooksHandler,
@@ -61,7 +62,7 @@ export const getRoutes = () => {
     },
     {
       method: 'GET',
-      path: '/getCards/{params*}',
+      path: `${CARDS_PATH_PREFIX}/getCards/{params*}`,
       handler: {
         directory: {
           path: 'cards',

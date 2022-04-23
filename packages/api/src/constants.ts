@@ -15,7 +15,6 @@ const get = (secret: string) => {
 
 export const HOST = process.env.HOST || '0.0.0.0'
 export const PORT = process.env.PORT || 4545
-
 export const WEBHOOK_URL = process.env.WEBHOOK_URL || '' // Insert your webhook URL
 export const AUTH_URL = process.env.AUTH_URL || '' // Insert the URL to your OpenCRVS auth service installation
 export const CALLBACK_URL = process.env.CALLBACK_URL || '' // Insert your webhooks URL here for Verification Request and Event Notification
@@ -68,3 +67,5 @@ export const MOSIP_PUBLIC_KEY: string = fs
 export const OPENCRVS_PRIV_KEY: string = fs
   .readFileSync(OPENCRVS_PRIV_KEY_PATH)
   .toString('utf8')
+
+export const CARDS_PATH_PREFIX = process.env.CARDS_PATH_PREFIX || '' // trailing slash must not be present. example: "/mosip-mediator"
