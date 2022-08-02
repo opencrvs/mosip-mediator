@@ -1,7 +1,8 @@
-import * as Hapi from 'hapi'
+import * as Hapi from '@hapi/hapi'
 import {
   WEBHOOK_URL,
   AUTH_URL,
+  CALLBACK_URL,
   CLIENT_ID,
   CLIENT_SECRET,
   SHA_SECRET
@@ -19,7 +20,6 @@ export default async function subscribeHandler(
     client_secret: CLIENT_SECRET
   })
 
-  logger.info(`authPayload: ${authPayload}`)
   const createToken = await fetch(
     resolve(AUTH_URL, 'authenticateSystemClient'),
     {
@@ -39,13 +39,12 @@ export default async function subscribeHandler(
   if (!createToken) {
     throw new Error('Cannot create token')
   }
-
-  logger.info(`createToken: ${createToken}`)
-  const subscriptionResponse = await fetch(WEBHOOK_URL, {
+  logger.info('Subscribe Handler - Received Auth Token')
+  const birthSubscriptionResponse = await fetch(WEBHOOK_URL, {
     method: 'POST',
     body: JSON.stringify({
       hub: {
-        callback: '', // Insert your webhooks URL here for Verification Request and Event Notification
+        callback: CALLBACK_URL,
         mode: 'subscribe',
         secret: SHA_SECRET,
         topic: 'BIRTH_REGISTERED'
@@ -62,8 +61,35 @@ export default async function subscribeHandler(
     .catch(error => {
       return Promise.reject(new Error(` request failed: ${error.message}`))
     })
-  if (!subscriptionResponse) {
+  if (!birthSubscriptionResponse) {
     throw new Error('Cannot get response from subscription process')
   }
+
+  // Death Subscription
+  const deathSubscriptionResponse = await fetch(WEBHOOK_URL, {
+    method: 'POST',
+    body: JSON.stringify({
+      hub: {
+        callback: CALLBACK_URL,
+        mode: 'subscribe',
+        secret: SHA_SECRET,
+        topic: 'DEATH_REGISTERED'
+      }
+    }),
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${createToken.token}`
+    }
+  })
+    .then(response => {
+      return response
+    })
+    .catch(error => {
+      return Promise.reject(new Error(` request failed: ${error.message}`))
+    })
+  if (!deathSubscriptionResponse) {
+    throw new Error('Cannot get response from subscription process')
+  }
+  logger.info('Subscribe Handler - Subscribed Successfully Token')
   return h.response().code(202)
 }

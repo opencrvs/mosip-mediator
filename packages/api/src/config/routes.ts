@@ -1,8 +1,10 @@
+import { CARDS_PATH_PREFIX } from '@api/constants'
 import subscribeHandler from '@api/features/subscribe/handler'
 import {
   webhooksHandler,
   subscriptionConfirmationHandler
 } from '@api/features/webhooks/handler'
+import { receiveNidHandler } from '@api/features/receive/handler'
 
 export const getRoutes = () => {
   const routes = [
@@ -47,6 +49,25 @@ export const getRoutes = () => {
       config: {
         auth: false,
         tags: ['api']
+      }
+    },
+    {
+      method: 'POST',
+      path: '/birthReceiveNid',
+      handler: receiveNidHandler,
+      config: {
+        auth: false,
+        tags: ['api']
+      }
+    },
+    {
+      method: 'GET',
+      path: `${CARDS_PATH_PREFIX}/getCards/{params*}`,
+      handler: {
+        directory: {
+          path: 'cards',
+          listing: true
+        }
       }
     }
   ]

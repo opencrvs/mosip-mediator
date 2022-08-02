@@ -21,26 +21,26 @@
     "app-module-path": "^2.2.0",
     "boom": "^7.2.0",
     "dotenv": "^8.0.0",
-    "hapi": "^17.5.1",
-    "hapi-auth-jwt2": "^8.1.0",
-    "hapi-pino": "^6.3.0",
+    "@hapi/hapi": "^20.0.0",
+    "@hapi/inert": "^6.0.5",
+    "hapi-pino": "^8.0.0",
     "joi": "^14.0.6",
     "node-fetch": "^2.6.0",
-    "pino": "^5.14.0",
+    "node-forge": "^1.0.0",
     "uuid": "^3.3.2"
   },
   "devDependencies": {
     "@ef-carbon/tspm": "^2.2.5",
     "@types/boom": "^7.2.0",
     "@types/dotenv": "^6.1.1",
-    "@types/hapi": "^17.0.12",
-    "@types/hapi-auth-jwt2": "^8.0.1",
-    "@types/hapi-pino": "^6.3.0",
+    "@types/hapi": "^18.0.7",
     "@types/jest": "^24.0.13",
     "@types/joi": "^14.0.0",
     "@types/node-fetch": "^2.3.7",
+    "@types/node-forge": "^1.0.0",
     "@types/nodemailer": "^6.4.0",
-    "@types/pino": "^5.14.0",
+    "@types/hapi-pino": "^8.0.0",
+    "@types/hapi__inert": "^5.2.3",
     "@types/uuid": "^3.4.3",
     "cross-env": "^5.2.0",
     "dotenv": "^8.0.0",
@@ -53,7 +53,7 @@
     "tslint": "^5.17.0",
     "tslint-config-prettier": "^1.12.0",
     "tslint-microsoft-contrib": "^6.2.0",
-    "typescript": "3.7.2"
+    "typescript": "^3.7.2"
   },
   "lint-staged": {
     "src/**/*.{ts,graphql}": [
