@@ -18,6 +18,7 @@ export const PORT = process.env.PORT || 4545
 export const WEBHOOK_URL = process.env.WEBHOOK_URL || '' // Insert your webhook URL
 export const AUTH_URL = process.env.AUTH_URL || '' // Insert the URL to your OpenCRVS auth service installation
 export const CALLBACK_URL = process.env.CALLBACK_URL || '' // Insert your webhooks URL here for Verification Request and Event Notification
+export const OPENHIM_MEDIATOR_URL = process.env.OPENHIM_MEDIATOR_URL || '' // Insert your OpenCRVS Country Configuration OpenHIM Mediator URL
 export const CLIENT_ID = get('CLIENT_ID') || (process.env.CLIENT_ID as string)
 export const CLIENT_SECRET =
   get('CLIENT_SECRET') || (process.env.CLIENT_SECRET as string)
@@ -50,9 +51,9 @@ export const THUMBPRINT_LENGTH: number = 32
 
 // export const ASYMMETRIC_ENCRYPT_ALGORITHM = 'RSA/ECB/PKCS1Padding'
 const MOSIP_PUBLIC_KEY_PATH =
-  process.env.MOSIP_PUBLIC_KEY_PATH || '/certs/mnt/mosip-public.key'
+  process.env.MOSIP_PUBLIC_KEY_PATH || '../../.secrets/public-key.pem'
 const OPENCRVS_PRIV_KEY_PATH =
-  process.env.OPENCRVS_PRIV_KEY_PATH || '/certs/mnt/opencrvs-priv.key'
+  process.env.OPENCRVS_PRIV_KEY_PATH || '../../.secrets/private-key.pem'
 if (!fs.existsSync(MOSIP_PUBLIC_KEY_PATH)) {
   logger.error(`Cannot find mosip public key at: ${MOSIP_PUBLIC_KEY_PATH}`)
   process.exit(1)

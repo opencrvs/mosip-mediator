@@ -15,7 +15,8 @@ import {
   ASYMMETRIC_ALGORITHM,
   OPENCRVS_PRIV_KEY,
   IS_THUMBRPINT,
-  THUMBPRINT_LENGTH
+  THUMBPRINT_LENGTH,
+  OPENHIM_MEDIATOR_URL
 } from '@api/constants'
 
 export async function receiveNidHandler(
@@ -26,9 +27,10 @@ export async function receiveNidHandler(
   if (!authHeaderValue) {
     return h.response(`{"message":"Unauthorized"}\n`).code(401)
   }
+  const openCRVSToken = `${authHeaderValue.replace('Bearer ', '')}`
   const verifyStatus = await fetch(resolve(AUTH_URL, 'verifyToken'), {
     method: 'POST',
-    body: `token=${authHeaderValue.replace('Bearer ', '')}`,
+    body: `token=${openCRVSToken}`,
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded'
     }
@@ -45,11 +47,11 @@ export async function receiveNidHandler(
     return h.response().code(400)
   }
   logger.info('Receive NID Handler - Verified Auth token')
-  asyncReceiveNid(JSON.stringify(request.payload))
+  asyncReceiveNid(JSON.stringify(request.payload), openCRVSToken)
   return h.response().code(200)
 }
 
-async function asyncReceiveNid(payloadStr: string) {
+async function asyncReceiveNid(payloadStr: string, openCRVSToken: string) {
   await new Promise(r =>
     setTimeout(() => {
       r()
@@ -82,6 +84,29 @@ async function asyncReceiveNid(payloadStr: string) {
   logger.info(
     `here birth registration no : ${birthRegNo} . decrypted data : ${decryptedData}`
   )
+
+  // send data to OpenCRVS Country Configuration OpenHIM Mediator URL
+  const nationalIdOpenHIMMediatorResponse = await fetch(OPENHIM_MEDIATOR_URL, {
+    method: 'POST',
+    body: JSON.stringify({
+      BRN: birthRegNo,
+      UIN: JSON.parse(decryptedData).credentialSubject.UIN,
+      VIN: JSON.parse(decryptedData).credentialSubject.VIN
+    }),
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${openCRVSToken}`
+    }
+  })
+    .then(response => {
+      return response
+    })
+    .catch(error => {
+      return Promise.reject(new Error(` request failed: ${error.message}`))
+    })
+  if (!nationalIdOpenHIMMediatorResponse) {
+    throw new Error('Cannot get response from OpenHIM Mediator')
+  }
   fs.readFile('cards/.template.html', 'utf8', (err, data) => {
     if (err) {
       logger.error(`ID - ${birthRegNo}. Error reading from file: ${err.stack}`)

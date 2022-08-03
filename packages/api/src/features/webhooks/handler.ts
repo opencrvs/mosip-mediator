@@ -31,7 +31,7 @@ export async function webhooksHandler(
   request: Hapi.Request,
   h: Hapi.ResponseToolkit
 ) {
-  logger.info(`birthHandler has been called with some payload`)
+  logger.info(`webhooksHandler has been called with some payload`)
 
   if (request.payload) {
     const pay = JSON.parse(JSON.stringify(request.payload))
