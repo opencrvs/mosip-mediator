@@ -51,9 +51,9 @@ export const THUMBPRINT_LENGTH: number = 32
 
 // export const ASYMMETRIC_ENCRYPT_ALGORITHM = 'RSA/ECB/PKCS1Padding'
 const MOSIP_PUBLIC_KEY_PATH =
-  process.env.MOSIP_PUBLIC_KEY_PATH || '../../.secrets/public-key.pem'
+  process.env.MOSIP_PUBLIC_KEY_PATH || '/certs/mnt/mosip-public.key'
 const OPENCRVS_PRIV_KEY_PATH =
-  process.env.OPENCRVS_PRIV_KEY_PATH || '../../.secrets/private-key.pem'
+  process.env.OPENCRVS_PRIV_KEY_PATH || '/certs/mnt/opencrvs-priv.key'
 if (!fs.existsSync(MOSIP_PUBLIC_KEY_PATH)) {
   logger.error(`Cannot find mosip public key at: ${MOSIP_PUBLIC_KEY_PATH}`)
   process.exit(1)
