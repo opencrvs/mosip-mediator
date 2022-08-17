@@ -35,11 +35,11 @@ export async function receiveNidHandler(
     return h.response().code(400)
   }
   logger.info('Receive NID Handler - Verified Auth token')
-  asyncReceiveNid(JSON.stringify(request.payload), openCRVSToken)
+  asyncReceiveUINToken(JSON.stringify(request.payload), openCRVSToken)
   return h.response().code(200)
 }
 
-async function asyncReceiveNid(payloadStr: string, openCRVSToken: string) {
+async function asyncReceiveUINToken(payloadStr: string, openCRVSToken: string) {
   logger.debug(`Received payload: ${payloadStr}`)
   const payload = JSON.parse(payloadStr)
   if (!payload.data || !payload.signature) {
@@ -64,32 +64,13 @@ async function asyncReceiveNid(payloadStr: string, openCRVSToken: string) {
   const uinToken: string = JSON.parse(decryptedData).uinToken
 
   ////
-  logger.info(
+  logger.debug(
     `here birth registration no : ${birthRegNo} . decrypted data : ${decryptedData}`
   )
 
   // send data to OpenCRVS Country Configuration OpenHIM Mediator URL
-  const nationalIdOpenHIMMediatorResponse = await fetch(OPENHIM_MEDIATOR_URL, {
-    method: 'POST',
-    body: JSON.stringify({
-      BRN: birthRegNo,
-      UIN: JSON.parse(decryptedData).credentialSubject.UIN,
-      VIN: JSON.parse(decryptedData).credentialSubject.VIN
-    }),
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${openCRVSToken}`
-    }
-  })
-    .then(response => {
-      return response
-    })
-    .catch(error => {
-      return Promise.reject(new Error(` request failed: ${error.message}`))
-    })
-  if (!nationalIdOpenHIMMediatorResponse) {
-    throw new Error('Cannot get response from OpenHIM Mediator')
-  }
+  await putUINTokenToHIMMediator(openCRVSToken, uinToken, birthRegNo)
+
   fs.readFile('cards/.template.html', 'utf8', (err, data) => {
     if (err) {
       logger.error(`ID - ${birthRegNo}. Error reading from file: ${err.stack}`)
@@ -104,6 +85,40 @@ async function asyncReceiveNid(payloadStr: string, openCRVSToken: string) {
       }
     })
   })
+}
+
+async function putUINTokenToHIMMediator(
+  openCRVSAuthToken: string,
+  uinToken: string,
+  birthRegNo: string
+) {
+  try {
+    const nationalIdOpenHIMMediatorResponse = await fetch(
+      OPENHIM_MEDIATOR_URL,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          BRN: birthRegNo,
+          UINTOKEN: uinToken
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${openCRVSAuthToken}`
+        }
+      }
+    )
+      .then(response => {
+        return response
+      })
+      .catch(error => {
+        return Promise.reject(new Error(` request failed: ${error.message}`))
+      })
+    if (!nationalIdOpenHIMMediatorResponse) {
+      throw new Error('Cannot get response from OpenHIM Mediator')
+    }
+  } catch (error) {
+    logger.error(error)
+  }
 }
 
 function decryptData(requestData: Buffer): string {
