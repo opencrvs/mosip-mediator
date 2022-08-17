@@ -19,7 +19,9 @@ import {
   MOSIP_AUTH_CLIENT_ID,
   MOSIP_AUTH_CLIENT_SECRET,
   MOSIP_AUTH_USER,
-  MOSIP_AUTH_PASS
+  MOSIP_AUTH_PASS,
+  IS_THUMBRPINT,
+  THUMBPRINT_LENGTH
 } from '@api/constants'
 // import * as Joi from 'joi'
 
@@ -75,12 +77,6 @@ export async function webhooksHandler(
 }
 
 async function proxyCallback(id: string, payload: string, sendingUrl: string) {
-  await new Promise(r =>
-    setTimeout(() => {
-      r()
-    }, 2000)
-  )
-
   let proxyRequest
   try {
     proxyRequest = encryptAndSign(id, payload)
@@ -91,20 +87,13 @@ async function proxyCallback(id: string, payload: string, sendingUrl: string) {
 
   logger.info(`Encryting Payload Complete. Here is the payload id : ${id}`)
 
-  const authToken = await fetch(MOSIP_AUTH_URL, {
-    method: 'POST',
-    body: `client_id=${MOSIP_AUTH_CLIENT_ID}&client_secret=${MOSIP_AUTH_CLIENT_SECRET}&username=${MOSIP_AUTH_USER}&password=${MOSIP_AUTH_PASS}&grant_type=password`,
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    }
-  })
-    .then(response => {
-      return response.json()
-    })
-    .catch(error => {
-      logger.error(`failed getting mosip auth token. error: ${error.message}`)
-      return undefined
-    })
+  const authToken = await getMosipAuthToken(
+    MOSIP_AUTH_URL,
+    MOSIP_AUTH_CLIENT_ID,
+    MOSIP_AUTH_CLIENT_SECRET,
+    MOSIP_AUTH_USER,
+    MOSIP_AUTH_PASS
+  )
   if (authToken === undefined || authToken['access_token'] === undefined) {
     logger.error(
       `failed getting mosip auth token. response: ${JSON.stringify(authToken)}`
@@ -143,6 +132,8 @@ function encryptAndSign(payId: string, requestData: string): string {
   const symmetricKey: string = forge.random.getBytesSync(SYMMETRIC_KEY_SIZE)
   const nonce: string = forge.random.getBytesSync(NONCE_SIZE)
   const aad: string = forge.random.getBytesSync(AAD_SIZE - NONCE_SIZE)
+  // putting random thumbprint temporarily
+  const thumbprint: string = forge.random.getBytesSync(THUMBPRINT_LENGTH)
 
   const encryptedSymmetricKey: string = mosipPublicKey.encrypt(
     symmetricKey,
@@ -166,7 +157,9 @@ function encryptAndSign(payId: string, requestData: string): string {
   encryptCipher.update(forge.util.createBuffer(requestData))
   encryptCipher.finish()
   const encryptedData = Buffer.concat([
-    Buffer.from(VERSION_RSA_2048),
+    Buffer.from(
+      IS_THUMBRPINT ? VERSION_RSA_2048 + thumbprint : VERSION_RSA_2048
+    ),
     Buffer.from(encryptedSymmetricKey, 'binary'),
     Buffer.from(KEY_SPLITTER),
     Buffer.from(
@@ -178,12 +171,13 @@ function encryptAndSign(payId: string, requestData: string): string {
     )
   ])
 
-  const digestSign = forge.md.sha256.create()
+  const digestSign = forge.md.sha512.create()
   digestSign.update(encryptedData.toString('binary'))
   const sign = opencrvsPrivateKey.sign(digestSign)
 
   return JSON.stringify({
     id: payId,
+    requestTime: new Date().toISOString(),
     data: encryptedData.toString('base64'),
     signature: forge.util.encode64(sign)
   })
@@ -210,4 +204,30 @@ export async function subscriptionConfirmationHandler(
   } else {
     return h.response({ challenge: decodeURIComponent(challenge) }).code(200)
   }
+}
+
+export async function getMosipAuthToken(
+  url: string,
+  clientId: string,
+  clientSecret: string,
+  username: string,
+  password: string
+) {
+  if (!url) {
+    return { access_token: 'Authorization' }
+  }
+  return await fetch(url, {
+    method: 'POST',
+    body: `client_id=${clientId}&client_secret=${clientSecret}&username=${username}&password=${password}&grant_type=password`,
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
+  })
+    .then(response => {
+      return response.json()
+    })
+    .catch(error => {
+      logger.error(`failed getting mosip auth token. error: ${error.message}`)
+      return undefined
+    })
 }
