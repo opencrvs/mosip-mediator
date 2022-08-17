@@ -157,9 +157,8 @@ function encryptAndSign(payId: string, requestData: string): string {
   encryptCipher.update(forge.util.createBuffer(requestData))
   encryptCipher.finish()
   const encryptedData = Buffer.concat([
-    Buffer.from(
-      IS_THUMBRPINT ? VERSION_RSA_2048 + thumbprint : VERSION_RSA_2048
-    ),
+    Buffer.from(VERSION_RSA_2048),
+    IS_THUMBRPINT ? Buffer.from(thumbprint, 'binary') : Buffer.alloc(0),
     Buffer.from(encryptedSymmetricKey, 'binary'),
     Buffer.from(KEY_SPLITTER),
     Buffer.from(
