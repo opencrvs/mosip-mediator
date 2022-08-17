@@ -45,7 +45,7 @@ export const AAD_SIZE: number = 32
 export const GCM_TAG_LENGTH: number = 16
 
 export const IS_THUMBRPINT: boolean =
-  process.env.IS_THUMBRPINT !== 'true' ? false : true
+  process.env.IS_THUMBRPINT === 'false' ? false : true
 export const THUMBPRINT_LENGTH: number = 32
 
 // export const ASYMMETRIC_ENCRYPT_ALGORITHM = 'RSA/ECB/PKCS1Padding'

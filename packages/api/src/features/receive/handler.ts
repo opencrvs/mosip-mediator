@@ -3,6 +3,7 @@ import * as forge from 'node-forge'
 import fetch from 'node-fetch'
 import * as fs from 'fs'
 import { resolve } from 'url'
+import base64url from 'base64url'
 import { logger } from '@api/logger'
 import {
   NONCE_SIZE,
@@ -26,20 +27,10 @@ export async function receiveNidHandler(
   if (!authHeaderValue) {
     return h.response(`{"message":"Unauthorized"}\n`).code(401)
   }
-  const verifyStatus = await fetch(resolve(AUTH_URL, 'verifyToken'), {
-    method: 'POST',
-    body: `token=${authHeaderValue.replace('Bearer ', '')}`,
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    }
-  })
-    .then(response => {
-      return response.json()
-    })
-    .catch(error => {
-      logger.error(`failed verifying token: ${error.message}`)
-      return undefined
-    })
+  const verifyStatus = await verifyAuthToken(
+    AUTH_URL,
+    authHeaderValue.replace('Bearer ', '')
+  )
   if (verifyStatus === undefined || verifyStatus['valid'] !== true) {
     logger.error(`Invalid Token. Response: ${JSON.stringify(verifyStatus)}`)
     return h.response().code(400)
@@ -50,24 +41,17 @@ export async function receiveNidHandler(
 }
 
 async function asyncReceiveNid(payloadStr: string) {
-  await new Promise(r =>
-    setTimeout(() => {
-      r()
-    }, 2000)
-  )
-
+  logger.debug(`Received payload: ${payloadStr}`)
   const payload = JSON.parse(payloadStr)
-  if (!payload.event) {
+  if (!payload.data || !payload.signature) {
     logger.error('invalid packet structure')
     return
   }
-  const birthRegNo = payload.event.data.opencrvsId
-  const encryptedData = Buffer.from(payload.event.data.credential, 'base64')
-  // const verifiableCredential = Buffer.from(payload.event.data.proof.signature,'base64')
-
-  // verify the Verifiable Credentials here
-
+  // skipping signature check
+  // verify the Credentials here
   logger.info('Verified Credentials sent by MOSIP')
+
+  const encryptedData = base64url.toBuffer(payload.data)
 
   // then decrypt data
   let decryptedData: string
@@ -77,6 +61,8 @@ async function asyncReceiveNid(payloadStr: string) {
     logger.error(`Error decrypting data : ${e.stack}`)
     return
   }
+  const birthRegNo: string = JSON.parse(decryptedData).opencrvsBRN
+  const uinToken: string = JSON.parse(decryptedData).uinToken
 
   ////
   logger.info(
@@ -89,7 +75,7 @@ async function asyncReceiveNid(payloadStr: string) {
     }
     const result = data
       .replace(/\$\!CRVSID/g, birthRegNo)
-      .replace(/\$\!UIN/g, JSON.parse(decryptedData).credentialSubject.UIN)
+      .replace(/\$\!UINTOKEN/g, uinToken)
     fs.writeFile(`cards/${birthRegNo}.html`, result, 'utf8', err2 => {
       if (err2) {
         logger.error(`ID - ${birthRegNo}. Error Writing to file: ${err2.stack}`)
@@ -101,7 +87,7 @@ async function asyncReceiveNid(payloadStr: string) {
 function decryptData(requestData: Buffer): string {
   const keyDemiliterIndex: number = requestData.indexOf(KEY_SPLITTER)
   if (keyDemiliterIndex < 0) {
-    throw new Error('Imporper encrypted data format')
+    throw new Error('Improper encrypted data format')
   }
 
   let encryptedSymmetricKey: Buffer
@@ -112,7 +98,9 @@ function decryptData(requestData: Buffer): string {
 
   if (requestData.indexOf(VERSION_RSA_2048) === 0) {
     encryptedSymmetricKey = requestData.subarray(
-      THUMBPRINT_LENGTH + VERSION_RSA_2048.length,
+      IS_THUMBRPINT
+        ? VERSION_RSA_2048.length + THUMBPRINT_LENGTH
+        : VERSION_RSA_2048.length,
       keyDemiliterIndex
     )
     nonce = requestData.subarray(
@@ -131,8 +119,6 @@ function decryptData(requestData: Buffer): string {
       requestData.length - GCM_TAG_LENGTH,
       requestData.length
     )
-
-    logger.info(`encKey Length: ${encryptedSymmetricKey.length}`)
   } else if (IS_THUMBRPINT) {
     encryptedSymmetricKey = requestData.subarray(
       THUMBPRINT_LENGTH,
@@ -194,4 +180,23 @@ function decryptData(requestData: Buffer): string {
     throw new Error('Unable to decrypt data')
   }
   return Buffer.from(decipher.output.getBytes(), 'binary').toString('utf8')
+}
+async function verifyAuthToken(authUrl: string, token: string) {
+  if (!authUrl) {
+    return { valid: true }
+  }
+  return await fetch(resolve(authUrl, 'verifyToken'), {
+    method: 'POST',
+    body: `token=${token}`,
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
+  })
+    .then(response => {
+      return response.json()
+    })
+    .catch(error => {
+      logger.error(`failed verifying token: ${error.message}`)
+      return undefined
+    })
 }
