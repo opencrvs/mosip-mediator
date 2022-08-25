@@ -28,7 +28,7 @@ export const MOSIP_BIRTH_PROXY_CALLBACK_URL =
   process.env.MOSIP_BIRTH_PROXY_CALLBACK_URL || '' // Insert your URL here to which the birth event has to be proxied to
 export const MOSIP_DEATH_PROXY_CALLBACK_URL =
   process.env.MOSIP_DEATH_PROXY_CALLBACK_URL || '' // Insert your URL here to which the death event has to be proxied to
-export const MOSIP_GENERATE_RID_URL = process.env.MOSIP_GENERATE_RID_URL || ''
+export const MOSIP_GENERATE_AID_URL = process.env.MOSIP_GENERATE_AID_URL || ''
 export const MOSIP_AUTH_URL = process.env.MOSIP_AUTH_URL || ''
 export const MOSIP_AUTH_CLIENT_ID = process.env.MOSIP_AUTH_CLIENT_ID || ''
 export const MOSIP_AUTH_CLIENT_SECRET =

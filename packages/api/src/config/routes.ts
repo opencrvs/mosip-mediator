@@ -5,7 +5,7 @@ import {
   subscriptionConfirmationHandler
 } from '@api/features/webhooks/handler'
 import { receiveNidHandler } from '@api/features/receive/handler'
-import { generateMosipRid } from '@api/features/generateRid'
+import { generateMosipAidReqHandler } from '@api/features/generateMosipAid'
 
 export const getRoutes = () => {
   const routes = [
@@ -63,8 +63,8 @@ export const getRoutes = () => {
     },
     {
       method: 'GET',
-      path: '/generateMosipRid',
-      handler: generateMosipRid,
+      path: '/generateMosipAid',
+      handler: generateMosipAidReqHandler,
       config: {
         auth: false,
         tags: ['api']
