@@ -1,11 +1,10 @@
 import * as Hapi from '@hapi/hapi'
-import fetch from 'node-fetch'
 import * as fs from 'fs'
 import base64url from 'base64url'
 import { logger } from '@api/logger'
-import { OPENHIM_MEDIATOR_URL } from '@api/constants'
 import { verifyOpencrvsAuthToken } from '@api/authToken/opencrvsAuthToken'
 import { decryptData } from '@api/crypto/decrypt'
+import { putDataToOpenHIMMediator } from '@api/util/openHIMMediatorUtil'
 
 export async function receiveNidHandler(
   request: Hapi.Request,
@@ -55,7 +54,13 @@ async function asyncReceiveUINToken(payloadStr: string, openCRVSToken: string) {
   )
 
   // send data to OpenCRVS Country Configuration OpenHIM Mediator URL
-  await putUINTokenToHIMMediator(openCRVSToken, uinToken, birthRegNo)
+  await putDataToOpenHIMMediator(
+    openCRVSToken,
+    JSON.stringify({
+      BRN: birthRegNo,
+      UINTOKEN: uinToken
+    })
+  )
 
   fs.readFile('cards/.template.html', 'utf8', (err, data) => {
     if (err) {
@@ -71,38 +76,4 @@ async function asyncReceiveUINToken(payloadStr: string, openCRVSToken: string) {
       }
     })
   })
-}
-
-async function putUINTokenToHIMMediator(
-  openCRVSAuthToken: string,
-  uinToken: string,
-  birthRegNo: string
-) {
-  try {
-    const nationalIdOpenHIMMediatorResponse = await fetch(
-      OPENHIM_MEDIATOR_URL,
-      {
-        method: 'POST',
-        body: JSON.stringify({
-          BRN: birthRegNo,
-          UINTOKEN: uinToken
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${openCRVSAuthToken}`
-        }
-      }
-    )
-      .then(response => {
-        return response
-      })
-      .catch(error => {
-        return Promise.reject(new Error(` request failed: ${error.message}`))
-      })
-    if (!nationalIdOpenHIMMediatorResponse) {
-      throw new Error('Cannot get response from OpenHIM Mediator')
-    }
-  } catch (error) {
-    logger.error(error)
-  }
 }

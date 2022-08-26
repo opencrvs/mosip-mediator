@@ -1,7 +1,7 @@
 import { resolve } from 'url'
 import fetch from 'node-fetch'
 import { logger } from '@api/logger'
-import { AUTH_URL } from '@api/constants'
+import { AUTH_URL, CLIENT_ID, CLIENT_SECRET } from '@api/constants'
 
 export async function verifyOpencrvsAuthToken(token: string): Promise<boolean> {
   if (!AUTH_URL) {
@@ -25,5 +25,32 @@ export async function verifyOpencrvsAuthToken(token: string): Promise<boolean> {
     return false
   } else {
     return valid['valid']
+  }
+}
+
+export async function getOpencrvsAuthToken(): Promise<string> {
+  const createToken = await fetch(
+    resolve(AUTH_URL, 'authenticateSystemClient'),
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET
+      }),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }
+  )
+    .then(response => {
+      return response.json()
+    })
+    .catch(error => {
+      return Promise.reject(new Error(` request failed: ${error.message}`))
+    })
+  if ('token' in createToken) {
+    return createToken.token
+  } else {
+    return ''
   }
 }

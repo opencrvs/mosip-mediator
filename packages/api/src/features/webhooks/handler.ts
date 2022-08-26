@@ -7,6 +7,8 @@ import {
 import { logger } from '@api/logger'
 import { encryptAndSign } from '@api/crypto/encrypt'
 import { getMosipAuthToken } from '@api/authToken/mosipAuthToken'
+import { generateMosipAid } from '@api/features/generateMosipAid'
+import { putDataToOpenHIMMediatorWithToken } from '@api/util/openHIMMediatorUtil'
 
 interface IRequestParams {
   [key: string]: string
@@ -36,6 +38,9 @@ export async function webhooksHandler(
         .code(500)
     }
     let payId: string = ''
+    let isAIDSet: boolean = false
+    const mosipAid: string = await generateMosipAid()
+    let BRN: string = ''
     try {
       const entries = pay.event.context[0].entry
       for (const entry of entries) {
@@ -43,6 +48,19 @@ export async function webhooksHandler(
           entry.resource.resourceType.toUpperCase() === 'Task'.toUpperCase()
         ) {
           payId = entry.resource.focus.reference.split('/')[1]
+        } else if (
+          entry.resource.resourceType.toUpperCase() === 'Patient'.toUpperCase()
+        ) {
+          for (const id of entry.resource.identifier) {
+            if (id.type === 'BIRTH_REGISTRATION_NUMBER') {
+              BRN = id.value
+              break
+            }
+          }
+          entry.resource.identifier.push({ type: 'MOSIP_AID', value: mosipAid })
+          isAIDSet = true
+        }
+        if (payId && isAIDSet) {
           break
         }
       }
@@ -52,8 +70,14 @@ export async function webhooksHandler(
     } catch (e) {
       return h.response().code(500)
     }
+    await putDataToOpenHIMMediatorWithToken(
+      JSON.stringify({
+        BRN,
+        MOSIP_AID: mosipAid
+      })
+    )
     logger.info(`ID - ${payId}. Able to get txnId`)
-    proxyCallback(payId, JSON.stringify(request.payload), sendingUrl)
+    proxyCallback(payId, JSON.stringify(pay), sendingUrl)
   }
 
   return h.response().code(200)
