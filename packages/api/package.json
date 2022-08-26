@@ -27,7 +27,8 @@
     "joi": "^14.0.6",
     "node-fetch": "^2.6.0",
     "node-forge": "^1.0.0",
-    "uuid": "^3.3.2"
+    "uuid": "^3.3.2",
+    "base64url": "3.0.1"
   },
   "devDependencies": {
     "@ef-carbon/tspm": "^2.2.5",

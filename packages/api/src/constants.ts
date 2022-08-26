@@ -28,6 +28,7 @@ export const MOSIP_BIRTH_PROXY_CALLBACK_URL =
   process.env.MOSIP_BIRTH_PROXY_CALLBACK_URL || '' // Insert your URL here to which the birth event has to be proxied to
 export const MOSIP_DEATH_PROXY_CALLBACK_URL =
   process.env.MOSIP_DEATH_PROXY_CALLBACK_URL || '' // Insert your URL here to which the death event has to be proxied to
+export const MOSIP_GENERATE_AID_URL = process.env.MOSIP_GENERATE_AID_URL || ''
 export const MOSIP_AUTH_URL = process.env.MOSIP_AUTH_URL || ''
 export const MOSIP_AUTH_CLIENT_ID = process.env.MOSIP_AUTH_CLIENT_ID || ''
 export const MOSIP_AUTH_CLIENT_SECRET =
@@ -46,7 +47,7 @@ export const AAD_SIZE: number = 32
 export const GCM_TAG_LENGTH: number = 16
 
 export const IS_THUMBRPINT: boolean =
-  process.env.IS_THUMBRPINT !== 'true' ? false : true
+  process.env.IS_THUMBRPINT === 'false' ? false : true
 export const THUMBPRINT_LENGTH: number = 32
 
 // export const ASYMMETRIC_ENCRYPT_ALGORITHM = 'RSA/ECB/PKCS1Padding'
