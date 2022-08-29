@@ -41,6 +41,7 @@ export async function webhooksHandler(
     let isAIDSet: boolean = false
     const mosipAid: string = await generateMosipAid()
     let BRN: string = ''
+    let DRN: string = ''
     try {
       const entries = pay.event.context[0].entry
       for (const entry of entries) {
@@ -54,6 +55,9 @@ export async function webhooksHandler(
           for (const id of entry.resource.identifier) {
             if (id.type === 'BIRTH_REGISTRATION_NUMBER') {
               BRN = id.value
+              break
+            } else if (id.type === 'DEATH_REGISTRATION_NUMBER') {
+              DRN = id.value
               break
             }
           }
@@ -70,12 +74,21 @@ export async function webhooksHandler(
     } catch (e) {
       return h.response().code(500)
     }
-    await putDataToOpenHIMMediatorWithToken(
-      JSON.stringify({
-        BRN,
-        MOSIP_AID: mosipAid
-      })
-    )
+    if (BRN) {
+      await putDataToOpenHIMMediatorWithToken(
+        JSON.stringify({
+          BRN,
+          MOSIP_AID: mosipAid
+        })
+      )
+    } else if (DRN) {
+      await putDataToOpenHIMMediatorWithToken(
+        JSON.stringify({
+          DRN,
+          MOSIP_AID: mosipAid
+        })
+      )
+    }
     logger.info(`ID - ${payId}. Able to get txnId`)
     proxyCallback(payId, JSON.stringify(pay), sendingUrl)
   }
