@@ -69,3 +69,4 @@ export const OPENCRVS_PRIV_KEY: string = fs
   .toString('utf8')
 
 export const CARDS_PATH_PREFIX = process.env.CARDS_PATH_PREFIX || '' // trailing slash must not be present. example: "/mosip-mediator"
+export const DEFAULT_TIMEOUT = 600000
