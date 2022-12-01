@@ -1,0 +1,151 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opencrvs-confmap
+data:
+  WEBHOOK_URL: "https://webhooks.farajaland.opencrvs.org/webhooks"
+  AUTH_URL: "https://auth.farajaland.opencrvs.org/"
+  CALLBACK_URL: "https://api.mec.mosip.net/opencrvs-side-mediator/webhooks"
+  MOSIP_BIRTH_PROXY_CALLBACK_URL: "http://opencrvs-mediator.opencrvs/opencrvs/v1/birth"
+  MOSIP_DEATH_PROXY_CALLBACK_URL: "http://opencrvs-mediator.opencrvs/opencrvs/v1/death"
+  MOSIP_AUTH_URL: "http://keycloak.keycloak/auth/realms/mosip/protocol/openid-connect/token"
+  WG_PEERS: ""
+  MOSIP_GENERATE_AID_URL: "http://opencrvs-mediator.opencrvs/opencrvs/v1/generateAid"
+  CARDS_PATH_PREFIX: "/opencrvs-side-mediator"
+  OPENHIM_MEDIATOR_URL: "https://countryconfig.farajaland.opencrvs.org/mosip-openhim-mediator"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: opencrvs-client
+type: Opaque
+data:
+  CLIENT_ID: ""
+  CLIENT_SECRET: ""
+  SHA_SECRET: ""
+  MOSIP_AUTH_CLIENT_ID: ""
+  MOSIP_AUTH_CLIENT_SECRET: ""
+  MOSIP_AUTH_USER: ""
+  MOSIP_AUTH_PASS: ""
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: opencrvs-out-data-claim
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 200Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opencrvs-mediator
+  labels:
+    app.kubernetes.io/name: opencrvs-mediator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: opencrvs-mediator
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: opencrvs-mediator
+    spec:
+      containers:
+      - name: mediator
+        image: lalithkota/opencrvs-mosip-mediator:vid-and-death-hook
+        ports:
+        - containerPort: 4545
+          name: http
+          protocol: TCP
+        imagePullPolicy: Always
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            add: ["NET_ADMIN", "SYS_ADMIN"]
+        envFrom:
+        - configMapRef:
+            name: opencrvs-confmap
+        - secretRef:
+            name: opencrvs-client
+        volumeMounts:
+        - mountPath: "/usr/src/app/packages/api/cards"
+          name: pvc-for-out-data
+        - mountPath: "/usr/src/app/packages/api/cards/.template.html"
+          name: card-template
+          subPath: ".template.html"
+        - mountPath: "/etc/wireguard"
+          name: wg-peers
+        - mountPath: "/certs/mnt"
+          name: cert-files
+      volumes:
+      - name: pvc-for-out-data
+        persistentVolumeClaim:
+          claimName: opencrvs-out-data-claim
+      - name: wg-peers
+        configMap:
+          name: opencrvs-wg-peers
+      - name: card-template
+        configMap:
+          name: opencrvs-mosip-card-template
+      - name: cert-files
+        secret:
+          secretName: opencrvs-certs
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: opencrvs-mediator
+  labels:
+    app.kubernetes.io/name: opencrvs-mediator
+spec:
+  selector:
+    app.kubernetes.io/name: opencrvs-mediator
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: http
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: opencrvs
+  labels:
+    app.kubernetes.io/name: opencrvs-mediator
+spec:
+  gateways:
+  - istio-system/public
+  hosts:
+  - '*'
+  http:
+  - headers:
+      request:
+        set:
+          x-forwarded-proto: https
+    match:
+    - uri:
+        prefix: /opencrvs-side-mediator/getCards
+    route:
+    - destination:
+        host: opencrvs-mediator
+        port:
+          number: 80
+  - headers:
+      request:
+        set:
+          x-forwarded-proto: https
+    match:
+    - uri:
+        prefix: /opencrvs-side-mediator/
+    rewrite:
+      uri: /
+    route:
+    - destination:
+        host: opencrvs-mediator
+        port:
+          number: 80
