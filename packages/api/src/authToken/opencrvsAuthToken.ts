@@ -48,6 +48,9 @@ export async function getOpencrvsAuthToken(): Promise<string> {
     .catch(error => {
       return Promise.reject(new Error(` request failed: ${error.message}`))
     })
+  logger.info(
+    `This is the authToken request response: ${JSON.stringify(createToken)}`
+  )
   if ('token' in createToken) {
     return createToken.token
   } else {
