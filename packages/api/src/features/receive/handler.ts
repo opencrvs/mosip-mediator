@@ -58,7 +58,7 @@ async function asyncReceiveUINToken(payloadStr: string, openCRVSToken: string) {
     openCRVSToken,
     JSON.stringify({
       BRN: birthRegNo,
-      UINTOKEN: uinToken
+      MOSIP_PSUT_TOKEN_ID: uinToken
     })
   )
 
@@ -69,7 +69,7 @@ async function asyncReceiveUINToken(payloadStr: string, openCRVSToken: string) {
     }
     const result = data
       .replace(/\$\!CRVSID/g, birthRegNo)
-      .replace(/\$\!UINTOKEN/g, uinToken)
+      .replace(/\$\!MOSIP_PSUT_TOKEN_ID/g, uinToken)
     fs.writeFile(`cards/${birthRegNo}.html`, result, 'utf8', err2 => {
       if (err2) {
         logger.error(`ID - ${birthRegNo}. Error Writing to file: ${err2.stack}`)
