@@ -8,7 +8,7 @@ export default async function subscribeHandler(
   request: Hapi.Request,
   h: Hapi.ResponseToolkit
 ) {
-  const authToken = getOpencrvsAuthToken()
+  const authToken = await getOpencrvsAuthToken()
   if (!authToken) {
     throw new Error('Cannot create token')
   }
@@ -34,6 +34,11 @@ export default async function subscribeHandler(
     .catch(error => {
       return Promise.reject(new Error(` request failed: ${error.message}`))
     })
+  logger.info(
+    `This is birthSubscriptionResponse: ${JSON.stringify(
+      birthSubscriptionResponse.body
+    )}`
+  )
   if (!birthSubscriptionResponse) {
     throw new Error('Cannot get response from subscription process')
   }
@@ -60,6 +65,11 @@ export default async function subscribeHandler(
     .catch(error => {
       return Promise.reject(new Error(` request failed: ${error.message}`))
     })
+  logger.info(
+    `This is deathSubscriptionResponse: ${JSON.stringify(
+      deathSubscriptionResponse.body
+    )}`
+  )
   if (!deathSubscriptionResponse) {
     throw new Error('Cannot get response from subscription process')
   }
