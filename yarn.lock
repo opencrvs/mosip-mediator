@@ -733,18 +733,18 @@
     "@babel/types" "^7.3.0"
 
 "@types/boom@*", "@types/boom@^7.2.0":
-  version "7.3.1"
-  resolved "https://registry.npmjs.org/@types/boom/-/boom-7.3.1.tgz"
-  integrity sha512-9952U+NySPQ35Xr8CU0lHrC3vBuqjh2xmK87l06uW8PN4ePHOqhtjrJV5+e7lqgb4UtzwUHELkbxEXxnPXLlTA==
+  version "7.3.5"
+  resolved "https://registry.yarnpkg.com/@types/boom/-/boom-7.3.5.tgz#b87dfad50d693a86b2f745efae7cf43d0af673ce"
+  integrity sha512-jBS0kU2s9W2sx+ILEyO4kxqIYLllqcUXTaVrBctvGptZ+4X3TWkkgY9+AmxdMPKrgiDDdLcfsaQCTu7bniLvgw==
 
 "@types/catbox@*":
-  version "10.0.7"
-  resolved "https://registry.npmjs.org/@types/catbox/-/catbox-10.0.7.tgz"
-  integrity sha512-8vjnM1eyHKwWfcbq7qb2NN4ltUgm4nVsT9QIM6IW4KqxbQbfQLbRApNTN+B3hvHvuFTHyvhJjZrBY3wNPp4tjA==
+  version "10.0.9"
+  resolved "https://registry.yarnpkg.com/@types/catbox/-/catbox-10.0.9.tgz#7564e279bd7ad4654d3adaa112f5e90f6911d805"
+  integrity sha512-4qXm1SmZurBMNFc/536+7gfbOlN43fWyoo4O0bdLqtpDK/cpuCYnEDou0Cl4naaMwuJ19rEwnuscR7tetGnTDA==
 
 "@types/dotenv@^6.1.0", "@types/dotenv@^6.1.1":
   version "6.1.1"
-  resolved "https://registry.npmjs.org/@types/dotenv/-/dotenv-6.1.1.tgz"
+  resolved "https://registry.yarnpkg.com/@types/dotenv/-/dotenv-6.1.1.tgz#f7ce1cc4fe34f0a4373ba99fefa437b0bec54b46"
   integrity sha512-ftQl3DtBvqHl9L16tpqqzA4YzCSXZfi7g8cQceTz5rOlYtk/IZbFjAv3mLOQlNIgOaylCQWQoBdDQHPgEBJPHg==
   dependencies:
     "@types/node" "*"
