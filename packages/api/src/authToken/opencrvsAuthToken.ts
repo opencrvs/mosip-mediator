@@ -29,19 +29,17 @@ export async function verifyOpencrvsAuthToken(token: string): Promise<boolean> {
 }
 
 export async function getOpencrvsAuthToken(): Promise<string> {
-  const createToken = await fetch(
-    resolve(AUTH_URL, 'authenticateSystemClient'),
-    {
-      method: 'POST',
-      body: JSON.stringify({
-        client_id: CLIENT_ID,
-        client_secret: CLIENT_SECRET
-      }),
-      headers: {
-        'Content-Type': 'application/json'
-      }
+  const createToken = await fetch(resolve(AUTH_URL, 'token'), {
+    method: 'POST',
+    body: JSON.stringify({
+      client_id: CLIENT_ID,
+      client_secret: CLIENT_SECRET,
+      grant_type: 'client_credentials'
+    }),
+    headers: {
+      'Content-Type': 'application/json'
     }
-  )
+  })
     .then(response => {
       return response.json()
     })
@@ -51,8 +49,8 @@ export async function getOpencrvsAuthToken(): Promise<string> {
   logger.info(
     `This is the authToken request response: ${JSON.stringify(createToken)}`
   )
-  if ('token' in createToken) {
-    return createToken.token
+  if ('access_token' in createToken) {
+    return createToken.access_token
   } else {
     return ''
   }
