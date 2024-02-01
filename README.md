@@ -1,8 +1,8 @@
 ## MOSIP Mediator
 
-This is an exmaple microservice mediator that subscribes to an OpenCRVS BIRTH_REGISTRATION Webhook.
+This is an example microservice mediator that subscribes to an OpenCRVS BIRTH_REGISTRATION Webhook.
 
-Read the [Documentation](http://documentation.opencrvs.org/opencrvs-core/docs/technology/webhooks)
+Read the [Documentation](https://documentation.opencrvs.org/technology/interoperability/national-id-client#mosip-functionality)
 
 It is built in Node.js
 
