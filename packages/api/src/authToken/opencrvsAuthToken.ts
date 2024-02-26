@@ -28,8 +28,13 @@ export async function verifyOpencrvsAuthToken(token: string): Promise<boolean> {
   }
 }
 
+const TOKEN_ENDPOINT = new URL('token', AUTH_URL)
+TOKEN_ENDPOINT.searchParams.set('client_id', CLIENT_ID)
+TOKEN_ENDPOINT.searchParams.set('client_secret', CLIENT_SECRET)
+TOKEN_ENDPOINT.searchParams.set('grant_type', 'client_credentials')
+
 export async function getOpencrvsAuthToken(): Promise<string> {
-  const createToken = await fetch(resolve(AUTH_URL, 'token'), {
+  const createToken = await fetch(TOKEN_ENDPOINT, {
     method: 'POST',
     body: JSON.stringify({
       client_id: CLIENT_ID,
