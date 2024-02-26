@@ -53,10 +53,20 @@ export async function webhooksHandler(
           entry.resource.resourceType.toUpperCase() === 'Patient'.toUpperCase()
         ) {
           for (const id of entry.resource.identifier) {
-            if (id.type === 'BIRTH_REGISTRATION_NUMBER') {
+            if (
+              id.type.coding.some(
+                (coding: { code: string; system?: string }) =>
+                  coding.code === 'BIRTH_REGISTRATION_NUMBER'
+              )
+            ) {
               BRN = id.value
               break
-            } else if (id.type === 'DEATH_REGISTRATION_NUMBER') {
+            } else if (
+              id.type.coding.some(
+                (coding: { code: string; system?: string }) =>
+                  coding.code === 'DEATH_REGISTRATION_NUMBER'
+              )
+            ) {
               DRN = id.value
               break
             }
