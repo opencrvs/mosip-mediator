@@ -71,7 +71,17 @@ export async function webhooksHandler(
               break
             }
           }
-          entry.resource.identifier.push({ type: 'MOSIP_AID', value: mosipAid })
+          entry.resource.identifier.push({
+            type: {
+              coding: [
+                {
+                  system: 'http://opencrvs.org/specs/identifier-type',
+                  code: 'MOSIP_AID'
+                }
+              ]
+            },
+            value: mosipAid
+          })
           isAIDSet = true
         }
         if (payId && isAIDSet) {
