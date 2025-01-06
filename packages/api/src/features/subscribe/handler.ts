@@ -20,7 +20,7 @@ export default async function subscribeHandler(
         callback: CALLBACK_URL,
         mode: 'subscribe',
         secret: SHA_SECRET,
-        topic: 'BIRTH_REGISTERED'
+        topic: 'BIRTH_REJECTED'
       }
     }),
     headers: {

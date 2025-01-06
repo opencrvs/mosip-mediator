@@ -4,8 +4,6 @@ import {
   webhooksHandler,
   subscriptionConfirmationHandler
 } from '@api/features/webhooks/handler'
-import { receiveNidHandler } from '@api/features/receive/handler'
-import { generateMosipAidReqHandler } from '@api/features/generateMosipAid'
 
 export const getRoutes = () => {
   const routes = [
@@ -47,24 +45,6 @@ export const getRoutes = () => {
       method: 'GET',
       path: '/webhooks',
       handler: subscriptionConfirmationHandler,
-      config: {
-        auth: false,
-        tags: ['api']
-      }
-    },
-    {
-      method: 'POST',
-      path: '/birthReceiveNid',
-      handler: receiveNidHandler,
-      config: {
-        auth: false,
-        tags: ['api']
-      }
-    },
-    {
-      method: 'GET',
-      path: '/generateMosipAid',
-      handler: generateMosipAidReqHandler,
       config: {
         auth: false,
         tags: ['api']

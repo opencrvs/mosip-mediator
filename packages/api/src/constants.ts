@@ -3,13 +3,13 @@ import { logger } from '@api/logger'
 
 export const HOST = process.env.HOST || '0.0.0.0'
 export const PORT = process.env.PORT || 4545
-export const WEBHOOK_URL = process.env.WEBHOOK_URL || '' // Insert your webhook URL
-export const AUTH_URL = process.env.AUTH_URL || '' // Insert the URL to your OpenCRVS auth service installation
-export const CALLBACK_URL = process.env.CALLBACK_URL || '' // Insert your webhooks URL here for Verification Request and Event Notification
+export const WEBHOOK_URL = process.env.WEBHOOK_URL || 'http://localhost:2525/webhooks' // Insert your webhook URL
+export const AUTH_URL = process.env.AUTH_URL || 'http://localhost:4040' // Insert the URL to your OpenCRVS auth service installation
+export const CALLBACK_URL = process.env.CALLBACK_URL || 'http://localhost:4545/webhooks' // Insert your webhooks URL here for Verification Request and Event Notification
 export const OPENHIM_MEDIATOR_URL = process.env.OPENHIM_MEDIATOR_URL || '' // Insert your OpenCRVS Country Configuration OpenHIM Mediator URL
-export const CLIENT_ID = process.env.CLIENT_ID as string
-export const CLIENT_SECRET = process.env.CLIENT_SECRET as string
-export const SHA_SECRET = process.env.SHA_SECRET as string
+export const CLIENT_ID = process.env.CLIENT_ID as string || 'a87be4c6-9fc3-40a7-8ef5-c6033f8116af'
+export const CLIENT_SECRET = process.env.CLIENT_SECRET as string || 'a1c755e9-2165-4898-9248-d72cf82ffb5d'
+export const SHA_SECRET = process.env.SHA_SECRET as string || '25eac0f5-03f8-4e07-ba25-a6fd0b7012f8'
 export const MOSIP_BIRTH_PROXY_CALLBACK_URL =
   process.env.MOSIP_BIRTH_PROXY_CALLBACK_URL || '' // Insert your URL here to which the birth event has to be proxied to
 export const MOSIP_DEATH_PROXY_CALLBACK_URL =
@@ -43,18 +43,18 @@ const OPENCRVS_PRIV_KEY_PATH =
   process.env.OPENCRVS_PRIV_KEY_PATH || '/certs/mnt/opencrvs-priv.key'
 if (!fs.existsSync(MOSIP_PUBLIC_KEY_PATH)) {
   logger.error(`Cannot find mosip public key at: ${MOSIP_PUBLIC_KEY_PATH}`)
-  process.exit(1)
+  // process.exit(1)
 }
 if (!fs.existsSync(OPENCRVS_PRIV_KEY_PATH)) {
   logger.error(`Cannot find opencrvs priv key at: ${OPENCRVS_PRIV_KEY_PATH}`)
-  process.exit(1)
+  // process.exit(1)
 }
-export const MOSIP_PUBLIC_KEY: string = fs
+/*export const MOSIP_PUBLIC_KEY: string = fs
   .readFileSync(MOSIP_PUBLIC_KEY_PATH)
   .toString('utf8')
 export const OPENCRVS_PRIV_KEY: string = fs
   .readFileSync(OPENCRVS_PRIV_KEY_PATH)
   .toString('utf8')
-
+*/
 export const CARDS_PATH_PREFIX = process.env.CARDS_PATH_PREFIX || '' // trailing slash must not be present. example: "/mosip-mediator"
 export const DEFAULT_TIMEOUT = 600000
